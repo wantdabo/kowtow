@@ -28,23 +28,5 @@ namespace Kowtow.Collision.Shapes
             this.height = height;
             this.radius = radius;
         }
-        
-        public override void SupportMapping(ref FPVector3 direction, out FPVector3 result)
-        {
-            FP sigma = FP.Sqrt(direction.x * direction.x + direction.z * direction.z);
-
-            if (sigma > FP.Zero)
-            {
-                result.x = direction.x / sigma * radius;
-                result.y = FP.Sign(direction.y) * height * FP.Half;
-                result.z = direction.z / sigma * radius;
-            }
-            else
-            {
-                result.x = FP.Zero;
-                result.y = FP.Sign(direction.y) * height * FP.Half;
-                result.z = FP.Zero;
-            }
-        }
     }
 }

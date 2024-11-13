@@ -22,13 +22,5 @@ namespace Kowtow.Collision.Shapes
             this.center = center;
             this.radius = radius;
         }
-        
-        public override void SupportMapping(ref FPVector3 direction, out FPVector3 result)
-        {
-            result = direction;
-            result.Normalize();
-            
-            FPVector3.Multiply(ref result, radius, out result);
-        }
     }
 }

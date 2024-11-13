@@ -20,12 +20,5 @@ namespace Kowtow.Collision.Shapes
         {
             center = this.center;
         }
-
-        /// <summary>
-        /// 映射
-        /// </summary>
-        /// <param name="direction">方向</param>
-        /// <param name="result">结果</param>
-        public abstract void SupportMapping(ref FPVector3 direction, out FPVector3 result);
     }
 }

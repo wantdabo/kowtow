@@ -22,13 +22,5 @@ namespace Kowtow.Collision.Shapes
             this.center = center;
             this.size = size;
         }
-
-        public override void SupportMapping(ref FPVector3 direction, out FPVector3 result)
-        {
-            var halfsize = size * FP.Half;
-            result.x = FP.Sign(direction.x) * halfsize.x;
-            result.y = FP.Sign(direction.y) * halfsize.y;
-            result.z = FP.Sign(direction.z) * halfsize.z;
-        }
     }
 }

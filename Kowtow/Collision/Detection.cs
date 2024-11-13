@@ -1,5 +1,6 @@
 ﻿using Kowtow.Collision.Shapes;
 using Kowtow.Math;
+using System.Collections.Generic;
 
 namespace Kowtow.Collision
 {
@@ -16,32 +17,7 @@ namespace Kowtow.Collision
         /// 迭代检测次数
         /// </summary>
         private const int iterations = 5;
-        
-        /// <summary>
-        /// 映射
-        /// </summary>
-        /// <param name="shape">几何体</param>
-        /// <param name="orientation">旋转矩阵</param>
-        /// <param name="position">位置</param>
-        /// <param name="direction">方向</param>
-        /// <param name="result">结果</param>
-        private static void Mapping(Shape shape, ref FPMatrix orientation, ref FPVector3 position, ref FPVector3 direction, out FPVector3 result)
-        {
-            result.x = ((direction.x * orientation.M11) + (direction.y * orientation.M12)) + (direction.z * orientation.M13);
-            result.y = ((direction.x * orientation.M21) + (direction.y * orientation.M22)) + (direction.z * orientation.M23);
-            result.z = ((direction.x * orientation.M31) + (direction.y * orientation.M32)) + (direction.z * orientation.M33);
 
-            shape.SupportMapping(ref result, out result);
-
-            FP x = ((result.x * orientation.M11) + (result.y * orientation.M21)) + (result.z * orientation.M31);
-            FP y = ((result.x * orientation.M12) + (result.y * orientation.M22)) + (result.z * orientation.M32);
-            FP z = ((result.x * orientation.M13) + (result.y * orientation.M23)) + (result.z * orientation.M33);
-
-            result.x = position.x + x;
-            result.y = position.y + y;
-            result.z = position.z + z;
-        }
-        
         /// <summary>
         /// 刚体与刚体碰撞检测
         /// </summary>
@@ -67,279 +43,143 @@ namespace Kowtow.Collision
         /// <returns>YES/NO</returns>
         public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
-            // Used variables
-            FPVector3 temp1, temp2;
-            FPVector3 v01, v02, v0;
-            FPVector3 v11, v12, v1;
-            FPVector3 v21, v22, v2;
-            FPVector3 v31, v32, v3;
-            FPVector3 v41 = FPVector3.zero, v42 = FPVector3.zero, v4 = FPVector3.zero;
-            FPVector3 mn;
+            return DetectBoxBox(shape1 as BoxShape, shape2 as BoxShape, position1, position2, orientation1, orientation2, out point, out normal, out penetration);
+        }
 
-            // Initialization of the output
-            point = normal = FPVector3.zero;
-            penetration = FP.Zero;
+        /// <summary>
+        /// 检测两个BoxShape之间的碰撞
+        /// </summary>
+        /// <param name="box1">立方体1</param>
+        /// <param name="box2">立方体2</param>
+        /// <param name="point">碰撞点</param>
+        /// <param name="normal">从立方体2指向立方体1的法线</param>
+        /// <param name="penetration">穿透深度</param>
+        /// <returns>是否发生碰撞</returns>
+        public static bool DetectBoxBox(BoxShape box1, BoxShape box2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        {
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
 
-            //JVector right = JVector.Right;
+            // 获取两个立方体的轴向向量
+            FPVector3[] axes1 = GetAxes(orientation1);
+            FPVector3[] axes2 = GetAxes(orientation2);
 
-            // Get the center of shape1 in world coordinates -> v01
-            shape1.SupportCenter(out v01);
-            FPVector3.Transform(ref v01, ref orientation1, out v01);
-            FPVector3.Add(ref position1, ref v01, out v01);
-
-            // Get the center of shape2 in world coordinates -> v02
-            shape2.SupportCenter(out v02);
-            FPVector3.Transform(ref v02, ref orientation2, out v02);
-            FPVector3.Add(ref position2, ref v02, out v02);
-
-            // v0 is the center of the minkowski difference
-            FPVector3.Subtract(ref v02, ref v01, out v0);
-
-            // Avoid case where centers overlap -- any direction is fine in this case
-            if (v0.IsNearlyZero()) v0 = new FPVector3(FP.EN4, 0, 0);
-
-            // v1 = support in direction of origin
-            mn = v0;
-            FPVector3.Negate(ref v0, out normal);
-
-            Mapping(shape1, ref orientation1, ref position1, ref mn, out v11);
-            Mapping(shape2, ref orientation2, ref position2, ref normal, out v12);
-            FPVector3.Subtract(ref v12, ref v11, out v1);
-
-            if (FPVector3.Dot(ref v1, ref normal) <= FP.Zero) return false;
-
-            // v2 = support perpendicular to v1,v0
-            FPVector3.Cross(ref v1, ref v0, out normal);
-
-            if (normal.IsNearlyZero())
+            // 生成所有分离轴（15个轴）
+            List<FPVector3> axes = new List<FPVector3>(axes1);
+            axes.AddRange(axes2);
+            for (int i = 0; i < axes1.Length; i++)
             {
-                FPVector3.Subtract(ref v1, ref v0, out normal);
-
-                normal.Normalize();
-
-                point = v11;
-                FPVector3.Add(ref point, ref v12, out point);
-                FPVector3.Multiply(ref point, FP.Half, out point);
-
-                FPVector3.Subtract(ref v12, ref v11, out temp1);
-                penetration = FPVector3.Dot(ref temp1, ref normal);
-
-                //point = v11;
-                //point2 = v12;
-                return true;
-            }
-
-            FPVector3.Negate(ref normal, out mn);
-            Mapping(shape1, ref orientation1, ref position1, ref mn, out v21);
-            Mapping(shape2, ref orientation2, ref position2, ref normal, out v22);
-            FPVector3.Subtract(ref v22, ref v21, out v2);
-
-            if (FPVector3.Dot(ref v2, ref normal) <= FP.Zero) return false;
-
-            // Determine whether origin is on + or - side of plane (v1,v0,v2)
-            FPVector3.Subtract(ref v1, ref v0, out temp1);
-            FPVector3.Subtract(ref v2, ref v0, out temp2);
-            FPVector3.Cross(ref temp1, ref temp2, out normal);
-
-            FP dist = FPVector3.Dot(ref normal, ref v0);
-
-            // If the origin is on the - side of the plane, reverse the direction of the plane
-            if (dist > FP.Zero)
-            {
-                FPVector3.Swap(ref v1, ref v2);
-                FPVector3.Swap(ref v11, ref v21);
-                FPVector3.Swap(ref v12, ref v22);
-                FPVector3.Negate(ref normal, out normal);
-            }
-
-
-            int phase2 = 0;
-            int phase1 = 0;
-            bool hit = false;
-
-            // Phase One: Identify a portal
-            while (true)
-            {
-                if (phase1 > iterations) return false;
-
-                phase1++;
-
-                // Obtain the support point in a direction perpendicular to the existing plane
-                // Note: This point is guaranteed to lie off the plane
-                FPVector3.Negate(ref normal, out mn);
-                Mapping(shape1, ref orientation1, ref position1, ref mn, out v31);
-                Mapping(shape2, ref orientation2, ref position2, ref normal, out v32);
-                FPVector3.Subtract(ref v32, ref v31, out v3);
-
-
-                if (FPVector3.Dot(ref v3, ref normal) <= FP.Zero)
+                for (int j = 0; j < axes2.Length; j++)
                 {
+                    FPVector3 crossProduct = FPVector3.Cross(axes1[i], axes2[j]);
+                    if (crossProduct.sqrMagnitude > FP.Epsilon)
+                    {
+                        axes.Add(crossProduct.normalized);
+                    }
+                }
+            }
+
+            // 遍历每个轴，检查是否存在分离
+            foreach (var axis in axes)
+            {
+                // 投影两个立方体到当前轴上
+                (FP min1, FP max1) = ProjectBoxOntoAxis(box1, position1, orientation1, axis);
+                (FP min2, FP max2) = ProjectBoxOntoAxis(box2, position2, orientation2, axis);
+
+                // 计算投影的重叠量
+                FP overlap = GetOverlap(min1, max1, min2, max2);
+
+                // 检查是否有分离轴
+                if (overlap <= 0)
+                {
+                    // 存在分离轴，表示无碰撞
                     return false;
                 }
 
-                // If origin is outside (v1,v0,v3), then eliminate v2 and loop
-                FPVector3.Cross(ref v1, ref v3, out temp1);
-                if (FPVector3.Dot(ref temp1, ref v0) < FP.Zero)
+                // 如果有碰撞，找到最小重叠量的轴
+                if (overlap < penetration)
                 {
-                    v2 = v3;
-                    v21 = v31;
-                    v22 = v32;
-                    FPVector3.Subtract(ref v1, ref v0, out temp1);
-                    FPVector3.Subtract(ref v3, ref v0, out temp2);
-                    FPVector3.Cross(ref temp1, ref temp2, out normal);
-                    continue;
-                }
-
-                // If origin is outside (v3,v0,v2), then eliminate v1 and loop
-                FPVector3.Cross(ref v3, ref v2, out temp1);
-                if (FPVector3.Dot(ref temp1, ref v0) < FP.Zero)
-                {
-                    v1 = v3;
-                    v11 = v31;
-                    v12 = v32;
-                    FPVector3.Subtract(ref v3, ref v0, out temp1);
-                    FPVector3.Subtract(ref v2, ref v0, out temp2);
-                    FPVector3.Cross(ref temp1, ref temp2, out normal);
-                    continue;
-                }
-
-                // Phase Two: Refine the portal
-                // We are now inside of a wedge...
-                while (true)
-                {
-                    phase2++;
-
-                    // Compute normal of the wedge face
-                    FPVector3.Subtract(ref v2, ref v1, out temp1);
-                    FPVector3.Subtract(ref v3, ref v1, out temp2);
-                    FPVector3.Cross(ref temp1, ref temp2, out normal);
-                    // Beginer
-
-                    // Can this happen???  Can it be handled more cleanly?
-                    if (normal.IsNearlyZero()) return true;
-
-                    normal.Normalize();
-                    // Compute distance from origin to wedge face
-                    FP d = FPVector3.Dot(ref normal, ref v1);
-
-
-                    // If the origin is inside the wedge, we have a hit
-                    if (d >= 0 && !hit)
-                    {
-                        // HIT!!!
-                        hit = true;
-                    }
-
-                    // Find the support point in the direction of the wedge face
-                    FPVector3.Negate(ref normal, out mn);
-                    Mapping(shape1, ref orientation1, ref position1, ref mn, out v41);
-                    Mapping(shape2, ref orientation2, ref position2, ref normal, out v42);
-                    FPVector3.Subtract(ref v42, ref v41, out v4);
-
-                    FPVector3.Subtract(ref v4, ref v3, out temp1);
-                    FP delta = FPVector3.Dot(ref temp1, ref normal);
-                    penetration = FPVector3.Dot(ref v4, ref normal);
-
-                    // If the boundary is thin enough or the origin is outside the support plane for the newly discovered vertex, then we can terminate
-                    if (delta <= epsilon || penetration <= FP.Zero || phase2 > iterations)
-                    {
-
-                        if (hit)
-                        {
-                            FPVector3.Cross(ref v1, ref v2, out temp1);
-                            FP b0 = FPVector3.Dot(ref temp1, ref v3);
-                            FPVector3.Cross(ref v3, ref v2, out temp1);
-                            FP b1 = FPVector3.Dot(ref temp1, ref v0);
-                            FPVector3.Cross(ref v0, ref v1, out temp1);
-                            FP b2 = FPVector3.Dot(ref temp1, ref v3);
-                            FPVector3.Cross(ref v2, ref v1, out temp1);
-                            FP b3 = FPVector3.Dot(ref temp1, ref v0);
-
-                            FP sum = b0 + b1 + b2 + b3;
-
-                            if (sum <= 0)
-                            {
-                                b0 = 0;
-                                FPVector3.Cross(ref v2, ref v3, out temp1);
-                                b1 = FPVector3.Dot(ref temp1, ref normal);
-                                FPVector3.Cross(ref v3, ref v1, out temp1);
-                                b2 = FPVector3.Dot(ref temp1, ref normal);
-                                FPVector3.Cross(ref v1, ref v2, out temp1);
-                                b3 = FPVector3.Dot(ref temp1, ref normal);
-
-                                sum = b1 + b2 + b3;
-                            }
-
-                            FP inv = FP.One / sum;
-
-                            FPVector3.Multiply(ref v01, b0, out point);
-                            FPVector3.Multiply(ref v11, b1, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-                            FPVector3.Multiply(ref v21, b2, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-                            FPVector3.Multiply(ref v31, b3, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-
-                            FPVector3.Multiply(ref v02, b0, out temp2);
-                            FPVector3.Add(ref temp2, ref point, out point);
-                            FPVector3.Multiply(ref v12, b1, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-                            FPVector3.Multiply(ref v22, b2, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-                            FPVector3.Multiply(ref v32, b3, out temp1);
-                            FPVector3.Add(ref point, ref temp1, out point);
-
-                            FPVector3.Multiply(ref point, inv * FP.Half, out point);
-
-                        }
-
-                        return hit;
-                    }
-
-                    FPVector3.Cross(ref v4, ref v0, out temp1);
-
-                    FP dot = FPVector3.Dot(ref temp1, ref v1);
-
-                    if (dot >= FP.Zero)
-                    {
-                        dot = FPVector3.Dot(ref temp1, ref v2);
-
-                        if (dot >= FP.Zero)
-                        {
-                            // Inside d1 & inside d2 ==> eliminate v1
-                            v1 = v4;
-                            v11 = v41;
-                            v12 = v42;
-                        }
-                        else
-                        {
-                            // Inside d1 & outside d2 ==> eliminate v3
-                            v3 = v4;
-                            v31 = v41;
-                            v32 = v42;
-                        }
-                    }
-                    else
-                    {
-                        dot = FPVector3.Dot(ref temp1, ref v3);
-
-                        if (dot >= FP.Zero)
-                        {
-                            // Outside d1 & inside d3 ==> eliminate v2
-                            v2 = v4;
-                            v21 = v41;
-                            v22 = v42;
-                        }
-                        else
-                        {
-                            // Outside d1 & outside d3 ==> eliminate v1
-                            v1 = v4;
-                            v11 = v41;
-                            v12 = v42;
-                        }
-                    }
+                    penetration = overlap;
+                    normal = axis;
                 }
             }
+
+            // 若所有轴都重叠，则发生碰撞
+            // 计算碰撞点（将使用穿透最小的轴进行计算）
+            point = CalculateCollisionPoint(position1, position2, normal, penetration);
+
+            return true;
+        }
+
+        private static FPVector3[] GetAxes(FPMatrix orientation)
+        {
+            var rotation = FPQuaternion.CreateFromMatrix(orientation);
+            // 获取 BoxShape 的局部坐标轴（右、上、前）并返回它们在世界坐标中的方向
+            FPVector3 right = rotation * FPVector3.right;
+            FPVector3 up = rotation * FPVector3.up;
+            FPVector3 forward = rotation * FPVector3.forward;
+            return new FPVector3[] { right, up, forward };
+        }
+
+        private static (FP min, FP max) ProjectBoxOntoAxis(BoxShape box, FPVector3 position, FPMatrix orientation, FPVector3 axis)
+        {
+            // 投影立方体的 8 个顶点到轴上，找到投影的最小值和最大值
+            FPVector3[] vertices = GetBoxVertices(box, position, orientation);
+            FP min = FPVector3.Dot(vertices[0], axis);
+            FP max = min;
+
+            for (int i = 1; i < vertices.Length; i++)
+            {
+                FP projection = FPVector3.Dot(vertices[i], axis);
+                min = FP.Min(min, projection);
+                max = FP.Max(max, projection);
+            }
+
+            return (min, max);
+        }
+
+        private static FPVector3[] GetBoxVertices(BoxShape box, FPVector3 position, FPMatrix orientation)
+        {
+            // 计算立方体的 8 个顶点位置
+            FPVector3[] vertices = new FPVector3[8];
+            FPVector3 extents = box.size * FP.Half;
+            var rotation = FPQuaternion.CreateFromMatrix(orientation);
+
+            // 生成相对于中心的8个顶点
+            vertices[0] = position + rotation * new FPVector3(-extents.x, -extents.y, -extents.z);
+            vertices[1] = position + rotation * new FPVector3(extents.x, -extents.y, -extents.z);
+            vertices[2] = position + rotation * new FPVector3(extents.x, extents.y, -extents.z);
+            vertices[3] = position + rotation * new FPVector3(-extents.x, extents.y, -extents.z);
+            vertices[4] = position + rotation * new FPVector3(-extents.x, -extents.y, extents.z);
+            vertices[5] = position + rotation * new FPVector3(extents.x, -extents.y, extents.z);
+            vertices[6] = position + rotation * new FPVector3(extents.x, extents.y, extents.z);
+            vertices[7] = position + rotation * new FPVector3(-extents.x, extents.y, extents.z);
+
+            return vertices;
+        }
+
+        private static FP GetOverlap(FP min1, FP max1, FP min2, FP max2)
+        {
+            // 添加 epsilon 来处理精度问题
+            FP overlap = FP.Min(max1, max2) - FP.Max(min1, min2);
+            return (overlap < epsilon) ? FP.Zero : overlap;
+        }
+
+        private static FPVector3 CalculateCollisionPoint(FPVector3 position1, FPVector3 position2, FPVector3 collisionAxis, FP penetration)
+        {
+            // 计算沿着碰撞法线轴的移动方向
+            FPVector3 moveDirection = collisionAxis.normalized;
+
+            // 根据穿透深度计算每个立方体沿着法线轴的移动量
+            FP halfPenetration = penetration / 2;
+
+            // 计算碰撞后的调整位置
+            FPVector3 newPosition1 = position1 - moveDirection * halfPenetration;
+            FPVector3 newPosition2 = position2 + moveDirection * halfPenetration;
+
+            // 返回调整后的碰撞点，避免过度偏移
+            return (newPosition1 + newPosition2) / 2;
         }
     }
 }

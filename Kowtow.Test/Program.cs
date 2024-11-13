@@ -22,6 +22,8 @@ var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groun
 var cube = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
 cube.rotation = FPQuaternion.Euler(new FPVector3(0, 0, 0));
 cube.position = new FPVector3(0, 10, 0);
+(cube.shape as BoxShape).size = new FPVector3(2, 2, 2);
+
 // 设置为动态
 cube.type = RigidbodyType.Dynamic;
 
