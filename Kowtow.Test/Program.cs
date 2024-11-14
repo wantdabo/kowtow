@@ -16,14 +16,14 @@ World world = new World(new FPVector3(0, -918 * FP.EN2, 0));
 FP groundArea = 100;
 
 // 添加地板
-var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 2));
+var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 3));
 
 // // 添加立方体
 // var item = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), FP.One, new Material(FP.One, FP.One, FP.Zero));
 // item.position = new FPVector3(0, 10, 0);
 
 // 添加球体
-var item = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 2));
+var item = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
 item.position = new FPVector3(0, 10, 0);
 
 // // 添加圆柱体
