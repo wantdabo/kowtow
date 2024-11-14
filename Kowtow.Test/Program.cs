@@ -18,13 +18,21 @@ FP groundArea = 100;
 // 添加地板
 var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), new Material(FP.One, FP.One, FP.Zero));
 
-// 添加立方体
-var cube = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
-cube.rotation = FPQuaternion.Euler(new FPVector3(50, 0, 0));
-cube.position = new FPVector3(0, 10, 0);
+// // 添加立方体
+// var item = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
+// item.position = new FPVector3(0, 10, 0);
+
+// // 添加球体
+// var item = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), new Material(FP.One, FP.One, FP.Zero));
+// item.position = new FPVector3(0, 10, 0);
+
+// 添加圆柱体
+var item = world.AddRigidbody(new CylinderShape(FPVector3.zero, 5, FP.Half), new Material(FP.One, FP.One, FP.Zero));
+item.position = new FPVector3(0, 10, 0);
+item.rotation = FPQuaternion.Euler(45, 0, 0);
 
 // 设置为动态
-cube.type = RigidbodyType.Dynamic;
+item.type = RigidbodyType.Dynamic;
 
 for (int i = 0; i < 10; i++)
 {
@@ -38,6 +46,6 @@ for (int i = 0; i < 10; i++)
 while (true)
 {
     world.Update(tick);
-    Console.WriteLine($"{cube.position}, {cube.rotation.eulerAngles}, {cube.GetColliders().Count}");
+    Console.WriteLine($"{item.position}, {item.rotation.eulerAngles}, {item.GetColliders().Count}");
     Thread.Sleep(ms);
 }
