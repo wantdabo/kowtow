@@ -20,7 +20,7 @@ var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groun
 
 // 添加立方体
 var cube = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
-cube.rotation = FPQuaternion.Euler(new FPVector3(0, 0, 0));
+cube.rotation = FPQuaternion.Euler(new FPVector3(50, 0, 0));
 cube.position = new FPVector3(0, 10, 0);
 
 // 设置为动态

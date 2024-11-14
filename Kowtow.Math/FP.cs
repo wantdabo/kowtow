@@ -825,40 +825,26 @@ namespace Kowtow.Math {
             return value._serializedValue >> FRACTIONAL_PLACES;
         }
 
-        public static implicit operator FP(float value) {
-            FP result;
-            result._serializedValue = (long)(value * ONE);
-            return result;
-            //return new FP((long)(value * ONE));
-        }
+        // public static implicit operator FP(float value) {
+        //     FP result;
+        //     result._serializedValue = (long)(value * ONE);
+        //     return result;
+        // }
 
         public static explicit operator float(FP value) {
             return (float)value._serializedValue / ONE;
-        }
-
-        public static implicit operator FP(double value) {
-            FP result;
-            result._serializedValue = (long)(value * ONE);
-            return result;
-            //return new FP((long)(value * ONE));
-        }
-
-        public static explicit operator double(FP value) {
-            return (double)value._serializedValue / ONE;
         }
 
         public static explicit operator FP(decimal value) {
             FP result;
             result._serializedValue = (long)(value * ONE);
             return result;
-            //return new FP((long)(value * ONE));
         }
 
         public static implicit operator FP(int value) {
             FP result;
             result._serializedValue = value * ONE;
             return result;
-            //return new FP(value * ONE);
         }
 
         public static explicit operator decimal(FP value) {
@@ -899,10 +885,6 @@ namespace Kowtow.Math {
         
         public static uint ToUInt(FP value) {
             return (uint)value;
-        }
-
-        public static FP FromFloat(float value) {
-            return value;
         }
 
         public static bool IsInfinity(FP value) {

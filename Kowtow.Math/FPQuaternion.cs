@@ -81,14 +81,14 @@ namespace Kowtow.Math
                 FPVector3 result = new FPVector3();
 
                 FP ysqr = y * y;
-                FP t0 = -2.0f * (ysqr + z * z) + 1.0f;
-                FP t1 = +2.0f * (x * y - w * z);
-                FP t2 = -2.0f * (x * z + w * y);
-                FP t3 = +2.0f * (y * z - w * x);
-                FP t4 = -2.0f * (x * x + ysqr) + 1.0f;
+                FP t0 = -2 * FP.One * (ysqr + z * z) + FP.One;
+                FP t1 = +2*FP.One * (x * y - w * z);
+                FP t2 = -2 * FP.One * (x * z + w * y);
+                FP t3 = +2 * FP.One * (y * z - w * x);
+                FP t4 = -2 * FP.One * (x * x + ysqr) + FP.One;
 
-                t2 = t2 > 1.0f ? 1.0f : t2;
-                t2 = t2 < -1.0f ? -1.0f : t2;
+                t2 = t2 > FP.One ? FP.One : t2;
+                t2 = t2 < -FP.One ? -FP.One : t2;
 
                 result.x = FP.Atan2(t3, t4) * FP.Rad2Deg;
                 result.y = FP.Asin(t2) * FP.Rad2Deg;
@@ -156,7 +156,7 @@ namespace Kowtow.Math
 
             FP dot = Dot(from, to);
 
-            if (dot < 0.0f)
+            if (dot < FP.Zero)
             {
                 to = Multiply(to, -1);
                 dot = -dot;
@@ -171,7 +171,7 @@ namespace Kowtow.Math
         {
             FP dot = Dot(from, to);
 
-            if (dot < 0.0f)
+            if (dot < FP.Zero)
             {
                 to = Multiply(to, -1);
                 dot = -dot;
@@ -425,7 +425,7 @@ namespace Kowtow.Math
             axis = axis.normalized;
 
             // 将角度减半并计算正弦和余弦值
-            FP halfAngle = angle * 0.5f;
+            FP halfAngle = angle * FP.Half;
             FP sinHalfAngle = FPMath.Sin(halfAngle);
             FP cosHalfAngle = FPMath.Cos(halfAngle);
 
@@ -548,9 +548,9 @@ namespace Kowtow.Math
          **/
         public static FPVector3 operator *(FPQuaternion quat, FPVector3 vec)
         {
-            FP num = quat.x * 2f;
-            FP num2 = quat.y * 2f;
-            FP num3 = quat.z * 2f;
+            FP num = quat.x * 2 * FP.One;
+            FP num2 = quat.y * 2 * FP.One;
+            FP num3 = quat.z * 2 * FP.One;
             FP num4 = quat.x * num;
             FP num5 = quat.y * num2;
             FP num6 = quat.z * num3;
@@ -562,9 +562,9 @@ namespace Kowtow.Math
             FP num12 = quat.w * num3;
 
             FPVector3 result;
-            result.x = (1f - (num5 + num6)) * vec.x + (num7 - num12) * vec.y + (num8 + num11) * vec.z;
-            result.y = (num7 + num12) * vec.x + (1f - (num4 + num6)) * vec.y + (num9 - num10) * vec.z;
-            result.z = (num8 - num11) * vec.x + (num9 + num10) * vec.y + (1f - (num4 + num5)) * vec.z;
+            result.x = (FP.One - (num5 + num6)) * vec.x + (num7 - num12) * vec.y + (num8 + num11) * vec.z;
+            result.y = (num7 + num12) * vec.x + (FP.One - (num4 + num6)) * vec.y + (num9 - num10) * vec.z;
+            result.z = (num8 - num11) * vec.x + (num9 + num10) * vec.y + (FP.One - (num4 + num5)) * vec.z;
 
             return result;
         }

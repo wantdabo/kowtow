@@ -134,8 +134,8 @@ namespace Kowtow.Math
         public static void Reflect(ref FPVector2 vector, ref FPVector2 normal, out FPVector2 result)
         {
             FP dot = Dot(vector, normal);
-            result.x = vector.x - ((2f * dot) * normal.x);
-            result.y = vector.y - ((2f * dot) * normal.y);
+            result.x = vector.x - ((2 * FP.One * dot) * normal.x);
+            result.y = vector.y - ((2 * FP.One * dot) * normal.y);
         }
 
         public static FPVector2 Reflect(FPVector2 vector, FPVector2 normal)
@@ -470,7 +470,7 @@ namespace Kowtow.Math
         {
             FP factor;
             DistanceSquared(ref value, ref zeroVector, out factor);
-            factor = 1f / FP.Sqrt(factor);
+            factor = FP.One / FP.Sqrt(factor);
             result.x = value.x * factor;
             result.y = value.y * factor;
         }

@@ -260,10 +260,10 @@ namespace Kowtow.Math {
             // Internally using FPs not to lose precission
             FP amountSquared = amount * amount;
             FP amountCubed = amountSquared * amount;
-            return 0.5 * (2.0 * value2 +
+            return FP.Half * (2 * FP.One * value2 +
                           (value3 - value1) * amount +
-                          (2.0 * value1 - 5.0 * value2 + 4.0 * value3 - value4) * amountSquared +
-                          (3.0 * value2 - value1 - 3.0 * value3 + value4) * amountCubed);
+                          (2*FP.One * value1 - 5 * FP.One * value2 + 4 * FP.One * value3 - value4) * amountSquared +
+                          (2 * FP.One * value2 - value1 - 3 * FP.One * value3 + value4) * amountCubed);
         }
 
         public static FP Distance(FP value1, FP value2) {
@@ -277,9 +277,9 @@ namespace Kowtow.Math {
             FP sCubed = s * s * s;
             FP sSquared = s * s;
 
-            if (amount == 0f)
+            if (amount == FP.Zero)
                 result = value1;
-            else if (amount == 1f)
+            else if (amount == FP.One)
                 result = value2;
             else
                 result = (2 * v1 - 2 * v2 + t2 + t1) * sCubed +
@@ -303,8 +303,8 @@ namespace Kowtow.Math {
             // It is expected that 0 < amount < 1
             // If amount < 0, return value1
             // If amount > 1, return value2
-            FP result = Clamp(amount, 0f, 1f);
-            result = Hermite(value1, 0f, value2, 0f, result);
+            FP result = Clamp(amount, FP.Zero, FP.One);
+            result = Hermite(value1, FP.Zero, value2, FP.Zero, result);
             return result;
         }
 
@@ -482,15 +482,15 @@ namespace Kowtow.Math {
 
         public static FP DeltaAngle(FP current, FP target)
         {
-            FP num = Repeat(target - current, 360f);
-            if (num > 180f)
+            FP num = Repeat(target - current, 360 * FP.One);
+            if (num > 180 * FP.One)
             {
-                num -= 360f;
+                num -= 360 * FP.One;
             }
             return num;
         }
 
-        public static FP MoveTowardsAngle(FP current, FP target, float maxDelta)
+        public static FP MoveTowardsAngle(FP current, FP target, FP maxDelta)
         {
             target = current + DeltaAngle(current, target);
             return MoveTowards(current, target, maxDelta);
@@ -512,9 +512,9 @@ namespace Kowtow.Math {
         public static FP SmoothDamp(FP current, FP target, ref FP currentVelocity, FP smoothTime, FP maxSpeed, FP deltaTime)
         {
             smoothTime = Max(FP.EN4, smoothTime);
-            FP num = 2f / smoothTime;
+            FP num = 2 * FP.One / smoothTime;
             FP num2 = num * deltaTime;
-            FP num3 = FP.One / (((FP.One + num2) + ((0.48f * num2) * num2)) + (((0.235f * num2) * num2) * num2));
+            FP num3 = FP.One / (((FP.One + num2) + ((48 * FP.EN2 * num2) * num2)) + (((235 * FP.EN3 * num2) * num2) * num2));
             FP num4 = current - target;
             FP num5 = target;
             FP max = maxSpeed * smoothTime;
