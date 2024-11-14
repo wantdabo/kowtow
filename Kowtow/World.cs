@@ -41,11 +41,12 @@ namespace Kowtow
         /// 添加刚体
         /// </summary>
         /// <param name="shape">几何体</param>
+        /// <param name="mass">质量</param>
         /// <param name="material">物理材质</param>
         /// <returns>刚体</returns>
-        public Rigidbody AddRigidbody(Shape shape, Material material)
+        public Rigidbody AddRigidbody(Shape shape, FP mass, Material material)
         {
-            Rigidbody rigidbody = new(shape, material);
+            Rigidbody rigidbody = new(shape, mass, material);
             rigidbody.world = this;
             rigidbodies.Add(rigidbody);
 
@@ -73,6 +74,7 @@ namespace Kowtow
             timestep = t;
 
             Detections();
+            NotifyEvents();
             
             foreach (var rigidbody in rigidbodies)
             {
@@ -105,6 +107,17 @@ namespace Kowtow
                         penetration = penetration
                     });
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 通知碰撞事件
+        /// </summary>
+        private void NotifyEvents()
+        {
+            foreach (var rigidbody in rigidbodies)
+            {
+                rigidbody.NotifyColliderEvents();
             }
         }
     }

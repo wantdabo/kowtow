@@ -70,6 +70,14 @@ namespace Kowtow
         /// </summary>
         public Shape shape { get; set; }
         /// <summary>
+        /// 质量
+        /// </summary>
+        public FP mass { get; set; }
+        /// <summary>
+        /// One Div Mass (1 / mass)
+        /// </summary>
+        public FP inverseMass { get { return FP.One / mass; } }
+        /// <summary>
         /// 包围盒
         /// </summary>
         public Bounding bounding { get; set; }
@@ -115,18 +123,49 @@ namespace Kowtow
         /// </summary>
         public FPVector3 velocity { get; set; }
         /// <summary>
+        /// 上一帧碰撞关系列表
+        /// </summary>
+        private List<Collider> lastcolliders = new();
+        /// <summary>
         /// 碰撞关系列表
         /// </summary>
         private List<Collider> colliders = new();
 
         /// <summary>
+        /// Collision 进入事件
+        /// </summary>
+        public event Action<Collider> CollisionEnter;
+        /// <summary>
+        /// Collision 持续事件
+        /// </summary>
+        public event Action<Collider> CollisionStay;
+        /// <summary>
+        /// Collision 离开事件
+        /// </summary>
+        public event Action<Collider> CollisionExit;
+        /// <summary>
+        /// Trigger 进入事件
+        /// </summary>
+        public event Action<Collider> TriggerEnter;
+        /// <summary>
+        /// Trigger 持续事件
+        /// </summary>
+        public event Action<Collider> TriggerStay;
+        /// <summary>
+        /// Trigger 离开事件
+        /// </summary>
+        public event Action<Collider> TriggerExit;
+
+        /// <summary>
         /// 刚体构造函数
         /// </summary>
         /// <param name="shape">几何体</param>
+        /// <param name="mass">质量</param>
         /// <param name="material">物理材质</param>
-        public Rigidbody(Shape shape, Material material)
+        public Rigidbody(Shape shape, FP mass, Material material)
         {
             this.shape = shape;
+            this.mass = mass;
             this.material = material;
             orientation = FPMatrix.CreateFromQuaternion(rotation);
         }
@@ -150,7 +189,7 @@ namespace Kowtow
         {
             if (RigidbodyType.Static == type) return;
 
-            velocity += impulse * material.inverseMass;
+            velocity += impulse * inverseMass;
         }
 
         /// <summary>
@@ -172,11 +211,60 @@ namespace Kowtow
         }
 
         /// <summary>
-        /// 重置碰撞
+        /// 重置碰撞信息
         /// </summary>
         public void ResetColliders()
         {
+            lastcolliders.Clear();
+            lastcolliders.AddRange(colliders);
             colliders.Clear();
+        }
+
+        /// <summary>
+        /// 通知碰撞事件
+        /// </summary>
+        public void NotifyColliderEvents()
+        {
+            foreach (var collider in colliders)
+            {
+                if (false == lastcolliders.Contains(collider))
+                {
+                    if (trigger)
+                    {
+                        TriggerEnter?.Invoke(collider);
+                    }
+                    else
+                    {
+                        CollisionEnter?.Invoke(collider);
+                    }
+                }
+                else
+                {
+                    if (trigger)
+                    {
+                        TriggerStay?.Invoke(collider);
+                    }
+                    else
+                    {
+                        CollisionStay?.Invoke(collider);
+                    }
+                }
+            }
+
+            foreach (var collider in lastcolliders)
+            {
+                if (false == colliders.Contains(collider))
+                {
+                    if (trigger)
+                    {
+                        TriggerExit?.Invoke(collider);
+                    }
+                    else
+                    {
+                        CollisionExit?.Invoke(collider);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -195,11 +283,11 @@ namespace Kowtow
         public void Update(FP t)
         {
             if (RigidbodyType.Static == type) return;
-            
+
             GravityForce();
 
             // 计算加速
-            var acceleration = force * material.inverseMass;
+            var acceleration = force * inverseMass;
             force = FPVector3.zero;
             // 增加加速
             velocity += acceleration * t;
@@ -208,6 +296,9 @@ namespace Kowtow
             // 更新位置
             position += velocity * t;
 
+            if (trigger) return;
+            
+            // 计算碰撞接触产生的作用力
             if (0 != colliders.Count)
             {
                 foreach (var collider in colliders)
@@ -224,7 +315,7 @@ namespace Kowtow
                     // 计算反弹速度（考虑材质弹力系数）
                     FP bounciness = FPMath.Min(material.bounciness, collider.rigidbody.material.bounciness);
                     FP impulseMagnitude = -(1 + bounciness) * velocityAlongNormal;
-                    impulseMagnitude /= material.inverseMass + collider.rigidbody.material.inverseMass; 
+                    impulseMagnitude /= inverseMass + collider.rigidbody.inverseMass;
 
                     // 应用冲量
                     FPVector3 impulse = impulseMagnitude * collider.normal;

@@ -16,27 +16,27 @@ World world = new World(new FPVector3(0, -918 * FP.EN2, 0));
 FP groundArea = 100;
 
 // 添加地板
-var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), new Material(FP.One, FP.One, FP.Zero));
+var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 3));
 
 // // 添加立方体
-// var item = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
+// var item = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), FP.One, new Material(FP.One, FP.One, FP.Zero));
 // item.position = new FPVector3(0, 10, 0);
 
-// // 添加球体
-// var item = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), new Material(FP.One, FP.One, FP.Zero));
-// item.position = new FPVector3(0, 10, 0);
-
-// 添加圆柱体
-var item = world.AddRigidbody(new CylinderShape(FPVector3.zero, 5, FP.Half), new Material(FP.One, FP.One, FP.Zero));
+// 添加球体
+var item = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
 item.position = new FPVector3(0, 10, 0);
-item.rotation = FPQuaternion.Euler(45, 0, 0);
+
+// // 添加圆柱体
+// var item = world.AddRigidbody(new CylinderShape(FPVector3.zero, 5, FP.Half), FP.One, new Material(FP.One, FP.One, FP.Zero));
+// item.position = new FPVector3(0, 10, 0);
+// item.rotation = FPQuaternion.Euler(45, 0, 0);
 
 // 设置为动态
 item.type = RigidbodyType.Dynamic;
 
 for (int i = 0; i < 10; i++)
 {
-    var c = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), new Material(FP.One, FP.One, FP.Zero));
+    var c = world.AddRigidbody(new BoxShape(FPVector3.zero, FPVector3.one), FP.One, new Material(FP.One, FP.Zero));
     c.position = new FPVector3((i + 1) * 3, 10, 0);
     // 设置为动态
     c.type = RigidbodyType.Dynamic;
