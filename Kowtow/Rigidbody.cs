@@ -70,17 +70,17 @@ namespace Kowtow
         /// </summary>
         public Shape shape { get; set; }
         /// <summary>
+        /// 包围盒
+        /// </summary>
+        public AABB aabb { get; set; }
+        /// <summary>
         /// 质量
         /// </summary>
-        public FP mass { get; set; }
+        public FP mass { get; set; } = FP.One;
         /// <summary>
         /// One Div Mass (1 / mass)
         /// </summary>
         public FP inverseMass { get { return FP.One / mass; } }
-        /// <summary>
-        /// 包围盒
-        /// </summary>
-        public Bounding bounding { get; set; }
         /// <summary>
         /// 物理材质
         /// </summary>
@@ -103,13 +103,8 @@ namespace Kowtow
             set
             {
                 mrotation = value;
-                orientation = FPMatrix.CreateFromQuaternion(value);
             }
         }
-        /// <summary>
-        /// 旋转矩阵
-        /// </summary>
-        public FPMatrix orientation { get; private set; }
         /// <summary>
         /// 力
         /// </summary>
@@ -167,7 +162,6 @@ namespace Kowtow
             this.shape = shape;
             this.mass = mass;
             this.material = material;
-            orientation = FPMatrix.CreateFromQuaternion(rotation);
         }
 
         /// <summary>
@@ -283,7 +277,8 @@ namespace Kowtow
         public void Update(FP t)
         {
             if (RigidbodyType.Static == type) return;
-
+            
+            // 计算重力
             GravityForce();
 
             // 计算加速
@@ -303,6 +298,8 @@ namespace Kowtow
             {
                 foreach (var collider in colliders)
                 {
+                    if (collider.rigidbody.trigger) continue;
+                    
                     // 计算碰撞相对速度
                     FPVector3 relativeVelocity = velocity - collider.rigidbody.velocity;
 
