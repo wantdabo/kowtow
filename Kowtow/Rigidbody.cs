@@ -65,10 +65,22 @@ namespace Kowtow
         /// 触发器 [开启后不会发生碰撞，但会触发事件]
         /// </summary>
         public bool trigger { get; set; }
+        private Shape mshape { get; set; }
         /// <summary>
         /// 几何体
         /// </summary>
-        public Shape shape { get; set; }
+        public Shape shape
+        {
+            get
+            {
+                return mshape;
+            }
+            set
+            {
+                mshape = value;
+                UpdateAABB();
+            }
+        }
         /// <summary>
         /// 包围盒
         /// </summary>
@@ -103,6 +115,7 @@ namespace Kowtow
             set
             {
                 mrotation = value;
+                UpdateAABB();
             }
         }
         /// <summary>
@@ -162,6 +175,15 @@ namespace Kowtow
             this.shape = shape;
             this.mass = mass;
             this.material = material;
+            UpdateAABB();
+        }
+        
+        /// <summary>
+        /// 更新 AABB 包围盒
+        /// </summary>
+        private void UpdateAABB()
+        {
+            aabb = AABB.CreateFromRigidbody(this);
         }
 
         /// <summary>

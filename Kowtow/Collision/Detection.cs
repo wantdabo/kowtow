@@ -11,6 +11,28 @@ namespace Kowtow.Collision
     public class Detection
     {
         /// <summary>
+        /// AABB 碰撞检测
+        /// </summary>
+        /// <param name="aabb1">AABB 1</param>
+        /// <param name="aabb2">AABB 2</param>
+        /// <param name="position1">坐标 1</param>
+        /// <param name="position2">坐标 2</param>
+        /// <returns>YES/NO</returns>
+        public static bool DetectAABB(AABB aabb1, AABB aabb2, FPVector3 position1, FPVector3 position2)
+        {
+            FPVector3 min1 = position1 + aabb1.center - aabb1.size * FP.Half;
+            FPVector3 max1 = position1 + aabb1.center + aabb1.size * FP.Half;
+            FPVector3 min2 = position2 + aabb2.center - aabb2.size * FP.Half;
+            FPVector3 max2 = position2 + aabb2.center + aabb2.size * FP.Half;
+
+            return (
+                min1.x < max2.x && max1.x > min2.x &&
+                min1.y < max2.y && max1.y > min2.y &&
+                min1.z < max2.z && max1.z > min2.z
+            );
+        }
+
+        /// <summary>
         /// 刚体与刚体碰撞检测
         /// </summary>
         /// <param name="rigidbody1">刚体 1</param>
@@ -21,7 +43,13 @@ namespace Kowtow.Collision
         /// <returns>YES/NO</returns>
         public static bool Detect(Rigidbody rigidbody1, Rigidbody rigidbody2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
-            return Detect(rigidbody1.shape, rigidbody2.shape, rigidbody1.position, rigidbody2.position, rigidbody1.orientation, rigidbody2.orientation, out point, out normal, out penetration);
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
+
+            if (false == DetectAABB(rigidbody1.aabb, rigidbody2.aabb, rigidbody1.position, rigidbody2.position)) return false;
+
+            return Detect(rigidbody1.shape, rigidbody2.shape, rigidbody1.position, rigidbody2.position, rigidbody1.rotation, rigidbody2.rotation, out point, out normal, out penetration, false);
         }
 
         /// <summary>
@@ -29,30 +57,43 @@ namespace Kowtow.Collision
         /// </summary>
         /// <param name="shape1">几何体 1</param>
         /// <param name="shape2">几何体 2</param>
+        /// <param name="position1">坐标 1</param>
+        /// <param name="position2">坐标 2</param>
+        /// <param name="rotation1">旋转 1</param>
+        /// <param name="rotation2">旋转 2</param>
         /// <param name="point">碰撞点</param>
         /// <param name="normal">从几何体 2 指向几何体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>YES/NO</returns>
-        public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabb = true)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
-            
+
+            // AABB 检测
+            if (aabb)
+            {
+                var aabb1 = AABB.CreateFromShape(shape1, rotation1);
+                var aabb2 = AABB.CreateFromShape(shape2, rotation2);
+                
+                if (false == DetectAABB(aabb1, aabb2, position1, position2)) return false;
+            }
+
             position1 += shape1.center;
             position2 += shape2.center;
 
             if (shape1 is BoxShape && shape2 is BoxShape)
             {
-                return DetectBoxBox(shape1 as BoxShape, shape2 as BoxShape, position1, position2, orientation1, orientation2, out point, out normal, out penetration);
+                return DetectBoxBox(shape1 as BoxShape, shape2 as BoxShape, position1, position2, rotation1, rotation2, out point, out normal, out penetration);
             }
             else if (shape1 is BoxShape && shape2 is SphereShape)
             {
-                return DetectBoxSphere(shape1 as BoxShape, shape2 as SphereShape, position1, position2, orientation1, out point, out normal, out penetration);
+                return DetectBoxSphere(shape1 as BoxShape, shape2 as SphereShape, position1, position2, rotation1, out point, out normal, out penetration);
             }
             else if (shape1 is BoxShape && shape2 is CylinderShape)
             {
-                return DetectBoxCylinder(shape1 as BoxShape, shape2 as CylinderShape, position1, position2, orientation1, orientation2, out point, out normal, out penetration);
+                return DetectBoxCylinder(shape1 as BoxShape, shape2 as CylinderShape, position1, position2, rotation1, rotation2, out point, out normal, out penetration);
             }
             else if (shape1 is SphereShape && shape2 is SphereShape)
             {
@@ -60,23 +101,23 @@ namespace Kowtow.Collision
             }
             else if (shape1 is SphereShape && shape2 is BoxShape)
             {
-                return DetectBoxSphere(shape2 as BoxShape, shape1 as SphereShape, position2, position1, orientation2, out point, out normal, out penetration);
+                return DetectBoxSphere(shape2 as BoxShape, shape1 as SphereShape, position2, position1, rotation2, out point, out normal, out penetration);
             }
             else if (shape1 is SphereShape && shape2 is CylinderShape)
             {
-                return DetectSphereCylinder(shape1 as SphereShape, shape2 as CylinderShape, position1, position2, orientation2, out point, out normal, out penetration);
+                return DetectSphereCylinder(shape1 as SphereShape, shape2 as CylinderShape, position1, position2, rotation2, out point, out normal, out penetration);
             }
             else if (shape1 is CylinderShape && shape2 is CylinderShape)
             {
-                return DetectCylinderCylinder(shape1 as CylinderShape, shape2 as CylinderShape, position1, position2, orientation1, orientation2, out point, out normal, out penetration);
+                return DetectCylinderCylinder(shape1 as CylinderShape, shape2 as CylinderShape, position1, position2, rotation1, rotation2, out point, out normal, out penetration);
             }
             else if (shape1 is CylinderShape && shape2 is BoxShape)
             {
-                return DetectBoxCylinder(shape2 as BoxShape, shape1 as CylinderShape, position2, position1, orientation2, orientation1, out point, out normal, out penetration);
+                return DetectBoxCylinder(shape2 as BoxShape, shape1 as CylinderShape, position2, position1, rotation2, rotation1, out point, out normal, out penetration);
             }
             else if (shape1 is CylinderShape && shape2 is SphereShape)
             {
-                return DetectSphereCylinder(shape2 as SphereShape, shape1 as CylinderShape, position2, position1, orientation2, out point, out normal, out penetration);
+                return DetectSphereCylinder(shape2 as SphereShape, shape1 as CylinderShape, position2, position1, rotation1, out point, out normal, out penetration);
             }
 
             return false;
@@ -91,15 +132,15 @@ namespace Kowtow.Collision
         /// <param name="normal">从立方体 2 指向立方体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>是否发生碰撞</returns>
-        private static bool DetectBoxBox(BoxShape box1, BoxShape box2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        private static bool DetectBoxBox(BoxShape box1, BoxShape box2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
             // 获取两个立方体的轴向向量
-            FPVector3[] axes1 = GetAxes(orientation1);
-            FPVector3[] axes2 = GetAxes(orientation2);
+            FPVector3[] axes1 = GetAxes(rotation1);
+            FPVector3[] axes2 = GetAxes(rotation2);
 
             // 生成所有分离轴（15个轴）
             List<FPVector3> axes = new List<FPVector3>(axes1);
@@ -120,8 +161,8 @@ namespace Kowtow.Collision
             foreach (var axis in axes)
             {
                 // 投影两个立方体到当前轴上
-                (FP min1, FP max1) = ProjectBoxOntoAxis(box1, position1, orientation1, axis);
-                (FP min2, FP max2) = ProjectBoxOntoAxis(box2, position2, orientation2, axis);
+                (FP min1, FP max1) = ProjectBoxOntoAxis(box1, position1, rotation1, axis);
+                (FP min2, FP max2) = ProjectBoxOntoAxis(box2, position2, rotation2, axis);
 
                 // 计算投影的重叠量
                 FP overlap = GetOverlap(min1, max1, min2, max2);
@@ -148,14 +189,14 @@ namespace Kowtow.Collision
             return true;
         }
 
-        private static bool DetectBoxSphere(BoxShape box, SphereShape sphere, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        private static bool DetectBoxSphere(BoxShape box, SphereShape sphere, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue; // 初始值设为最大
 
             // 获取 BoxShape 的局部坐标轴（右、上、前）并返回它们在世界坐标中的方向
-            FPVector3[] axes = GetAxes(orientation1);
+            FPVector3[] axes = GetAxes(rotation1);
             bool hasCollision = false;
 
             // 存储用于确定最近碰撞点和最小穿透的变量
@@ -165,7 +206,7 @@ namespace Kowtow.Collision
             for (int i = 0; i < axes.Length; i++)
             {
                 // 投影 BoxShape 到当前轴上
-                (FP min1, FP max1) = ProjectBoxOntoAxis(box, position1, orientation1, axes[i]);
+                (FP min1, FP max1) = ProjectBoxOntoAxis(box, position1, rotation1, axes[i]);
                 FP radius = sphere.radius;
                 FP min2 = FPVector3.Dot(position2, axes[i]) - radius;
                 FP max2 = FPVector3.Dot(position2, axes[i]) + radius;
@@ -207,18 +248,17 @@ namespace Kowtow.Collision
             return false;
         }
 
-        private static bool DetectBoxCylinder(BoxShape box1, CylinderShape cylinder2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        private static bool DetectBoxCylinder(BoxShape box1, CylinderShape cylinder2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
             // 获取 BoxShape 的局部坐标轴（右、上、前）并返回它们在世界坐标中的方向
-            FPVector3[] boxAxes = GetAxes(orientation1);
+            FPVector3[] boxAxes = GetAxes(rotation1);
 
-            var rotation = FPQuaternion.CreateFromMatrix(orientation2);
             // 获取 CylinderShape 的轴向向量
-            FPVector3 cylinderAxis = rotation * FPVector3.up;
+            FPVector3 cylinderAxis = rotation2 * FPVector3.up;
 
             // 生成所有分离轴（包括 BoxShape 的轴和交叉轴）
             List<FPVector3> axes = new List<FPVector3>(boxAxes);
@@ -236,10 +276,10 @@ namespace Kowtow.Collision
             foreach (var axis in axes)
             {
                 // 投影 BoxShape 到当前轴上
-                (FP min1, FP max1) = ProjectBoxOntoAxis(box1, position1, orientation1, axis);
+                (FP min1, FP max1) = ProjectBoxOntoAxis(box1, position1, rotation1, axis);
 
                 // 投影 CylinderShape 到当前轴上
-                (FP min2, FP max2) = ProjectCylinderOntoAxis(cylinder2, position2, orientation2, axis);
+                (FP min2, FP max2) = ProjectCylinderOntoAxis(cylinder2, position2, rotation2, axis);
 
                 // 计算投影的重叠量
                 FP overlap = GetOverlap(min1, max1, min2, max2);
@@ -292,15 +332,14 @@ namespace Kowtow.Collision
             return true;
         }
 
-        private static bool DetectSphereCylinder(SphereShape sphere1, CylinderShape cylinder2, FPVector3 position1, FPVector3 position2, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        private static bool DetectSphereCylinder(SphereShape sphere1, CylinderShape cylinder2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
             // 获取 CylinderShape 的轴向向量
-            var rotation = FPQuaternion.CreateFromMatrix(orientation2);
-            FPVector3 cylinderAxis = rotation * FPVector3.up;
+            FPVector3 cylinderAxis = rotation2 * FPVector3.up;
 
             // 计算球体中心到圆柱体轴的最近点
             FPVector3 closestPointOnAxis = ClosestPointOnLine(position2 - cylinderAxis * (cylinder2.height / 2), position2 + cylinderAxis * (cylinder2.height / 2), position1);
@@ -326,17 +365,15 @@ namespace Kowtow.Collision
             return true;
         }
 
-        private static bool DetectCylinderCylinder(CylinderShape shape1, CylinderShape shape2, FPVector3 position1, FPVector3 position2, FPMatrix orientation1, FPMatrix orientation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        private static bool DetectCylinderCylinder(CylinderShape shape1, CylinderShape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
             // 获取 CylinderShape 的轴向向量
-            var rotation1 = FPQuaternion.CreateFromMatrix(orientation1);
             FPVector3 cylinderAxis1 = rotation1 * FPVector3.up;
 
-            var rotation2 = FPQuaternion.CreateFromMatrix(orientation2);
             FPVector3 cylinderAxis2 = rotation2 * FPVector3.up;
 
             // 生成所有分离轴（2个轴）
@@ -346,8 +383,8 @@ namespace Kowtow.Collision
             foreach (var axis in axes)
             {
                 // 投影 CylinderShape 到当前轴上
-                (FP min1, FP max1) = ProjectCylinderOntoAxis(shape1, position1, orientation1, axis);
-                (FP min2, FP max2) = ProjectCylinderOntoAxis(shape2, position2, orientation2, axis);
+                (FP min1, FP max1) = ProjectCylinderOntoAxis(shape1, position1, rotation1, axis);
+                (FP min2, FP max2) = ProjectCylinderOntoAxis(shape2, position2, rotation2, axis);
 
                 // 计算投影的重叠量
                 FP overlap = GetOverlap(min1, max1, min2, max2);
@@ -383,10 +420,9 @@ namespace Kowtow.Collision
         }
 
 
-        private static (FP min, FP max) ProjectCylinderOntoAxis(CylinderShape cylinder, FPVector3 position, FPMatrix orientation, FPVector3 axis)
+        private static (FP min, FP max) ProjectCylinderOntoAxis(CylinderShape cylinder, FPVector3 position, FPQuaternion rotation, FPVector3 axis)
         {
             // 投影圆柱体的两个端点和半径到轴上，找到投影的最小值和最大值
-            var rotation = FPQuaternion.CreateFromMatrix(orientation);
             FPVector3 cylinderAxis = rotation * FPVector3.up;
             FPVector3 top = position + cylinderAxis * (cylinder.height * FP.Half - FP.Half);
             FPVector3 bottom = position - cylinderAxis * (cylinder.height * FP.Half - FP.Half);
@@ -398,9 +434,8 @@ namespace Kowtow.Collision
             return (min, max);
         }
 
-        private static FPVector3[] GetAxes(FPMatrix orientation)
+        private static FPVector3[] GetAxes(FPQuaternion rotation)
         {
-            var rotation = FPQuaternion.CreateFromMatrix(orientation);
             // 获取 BoxShape 的局部坐标轴（右、上、前）并返回它们在世界坐标中的方向
             FPVector3 right = rotation * FPVector3.right;
             FPVector3 up = rotation * FPVector3.up;
@@ -408,10 +443,10 @@ namespace Kowtow.Collision
             return new FPVector3[] { right, up, forward };
         }
 
-        private static (FP min, FP max) ProjectBoxOntoAxis(BoxShape box, FPVector3 position, FPMatrix orientation, FPVector3 axis)
+        private static (FP min, FP max) ProjectBoxOntoAxis(BoxShape box, FPVector3 position, FPQuaternion rotation, FPVector3 axis)
         {
             // 投影立方体的 8 个顶点到轴上，找到投影的最小值和最大值
-            FPVector3[] vertices = GetBoxVertices(box, position, orientation);
+            FPVector3[] vertices = GetBoxVertices(box, position, rotation);
             FP min = FPVector3.Dot(vertices[0], axis);
             FP max = min;
 
@@ -425,12 +460,11 @@ namespace Kowtow.Collision
             return (min, max);
         }
 
-        private static FPVector3[] GetBoxVertices(BoxShape box, FPVector3 position, FPMatrix orientation)
+        private static FPVector3[] GetBoxVertices(BoxShape box, FPVector3 position, FPQuaternion rotation)
         {
             // 计算立方体的 8 个顶点位置
             FPVector3[] vertices = new FPVector3[8];
             FPVector3 extents = box.size * FP.Half;
-            var rotation = FPQuaternion.CreateFromMatrix(orientation);
 
             // 生成相对于中心的8个顶点
             vertices[0] = position + rotation * new FPVector3(-extents.x, -extents.y, -extents.z);

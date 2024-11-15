@@ -96,7 +96,7 @@ namespace Kowtow
                     
                     // 层级检测
                     if (false == Layer.Query(self.layer, target.layer)) continue;
-                    
+                    // 精确碰撞检测
                     if (false == Detection.Detect(self, target, out var point, out var normal, out var penetration)) continue;
 
                     self.AddCollider(new Collider
