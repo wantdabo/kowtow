@@ -315,59 +315,7 @@ namespace Kowtow.Math {
         /// </summary>
         internal static FP Pow2(FP x)
         {
-            if (x.RawValue == 0)
-            {
-                return FP.One;
-            }
-
-            // Avoid negative arguments by exploiting that exp(-x) = 1/exp(x).
-            bool neg = x.RawValue < 0;
-            if (neg)
-            {
-                x = -x;
-            }
-
-            if (x == FP.One)
-            {
-                return neg ? FP.One / 2 : 2;
-            }
-            if (x >= FP.Log2Max)
-            {
-                return neg ? FP.One / FP.MaxValue : FP.MaxValue;
-            }
-            if (x <= FP.Log2Min)
-            {
-                return neg ? FP.MaxValue : FP.Zero;
-            }
-
-            /* The algorithm is based on the power series for exp(x):
-             * http://en.wikipedia.org/wiki/Exponential_function#Formal_definition
-             * 
-             * From term n, we get term n+1 by multiplying with x/n.
-             * When the sum term drops to zero, we can stop summing.
-             */
-
-            int integerPart = (int)Floor(x);
-            // Take fractional part of exponent
-            x = FP.FromRaw(x.RawValue & 0x00000000FFFFFFFF);
-
-            var result = FP.One;
-            var term = FP.One;
-            int i = 1;
-            while (term.RawValue != 0)
-            {
-                term = FP.FastMul(FP.FastMul(x, term), FP.Ln2) / i;
-                result += term;
-                i++;
-            }
-
-            result = FP.FromRaw(result.RawValue << integerPart);
-            if (neg)
-            {
-                result = FP.One / result;
-            }
-
-            return result;
+            return FP.Pow2(x);
         }
 
         /// <summary>
@@ -379,45 +327,7 @@ namespace Kowtow.Math {
         /// </exception>
         internal static FP Log2(FP x)
         {
-            if (x.RawValue <= 0)
-            {
-                throw new ArgumentOutOfRangeException("Non-positive value passed to Ln", "x");
-            }
-
-            // This implementation is based on Clay. S. Turner's fast binary logarithm
-            // algorithm (C. S. Turner,  "A Fast Binary Logarithm Algorithm", IEEE Signal
-            //     Processing Mag., pp. 124,140, Sep. 2010.)
-
-            long b = 1U << (FP.FRACTIONAL_PLACES - 1);
-            long y = 0;
-
-            long rawX = x.RawValue;
-            while (rawX < FP.ONE)
-            {
-                rawX <<= 1;
-                y -= FP.ONE;
-            }
-
-            while (rawX >= (FP.ONE << 1))
-            {
-                rawX >>= 1;
-                y += FP.ONE;
-            }
-
-            var z = FP.FromRaw(rawX);
-
-            for (int i = 0; i < FP.FRACTIONAL_PLACES; i++)
-            {
-                z = FP.FastMul(z, z);
-                if (z.RawValue >= (FP.ONE << 1))
-                {
-                    z = FP.FromRaw(z.RawValue >> 1);
-                    y += b;
-                }
-                b >>= 1;
-            }
-
-            return FP.FromRaw(y);
+            return FP.Log2(x);
         }
 
         /// <summary>

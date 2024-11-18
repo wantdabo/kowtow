@@ -1,3 +1,4 @@
+#if FP
 namespace Kowtow.Math {
     partial struct FP {
         public static readonly long[] AcosLut = {
@@ -25740,3 +25741,4 @@ namespace Kowtow.Math {
         };
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if FP
 namespace Kowtow.Math
  {
     partial struct FP 
@@ -25742,3 +25743,4 @@ namespace Kowtow.Math
         };
     }
 }
+#endif

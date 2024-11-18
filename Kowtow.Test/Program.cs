@@ -26,7 +26,7 @@ ball.position = new FPVector3(-10, 10, -10);
 ball.type = RigidbodyType.Dynamic;
 
 FPRandom random = FPRandom.New(19491001);
-for (int i = 0; i < 1000; i++)
+for (int i = 0; i < 20000; i++)
 {
     var ball2 = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
     ball2.position = new FPVector3(random.Next(-50000, 50000), 10, random.Next(-50000, 50000));
