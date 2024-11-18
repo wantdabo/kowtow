@@ -6,6 +6,21 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
+// Stopwatch sw = Stopwatch.StartNew();
+// sw.Reset();
+// sw.Restart();
+// for (int i = 0; i < 1000000; i++)
+// {
+//     var muldiv = i * 10 / 100;
+//     var addsub = i + 10 - 100;
+//     var sin = FPMath.Sin(90);
+//     var cos = FPMath.Cos(90);
+// }
+// sw.Stop();
+// Console.WriteLine($"Elapsed -> {sw.ElapsedMilliseconds}");
+//
+// Console.ReadKey();
+
 // 时间间隔
 FP tick = FP.One / 120;
 // 毫秒
