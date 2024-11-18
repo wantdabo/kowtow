@@ -15,15 +15,13 @@ namespace Kowtow.Collision
         /// </summary>
         /// <param name="aabb1">AABB 1</param>
         /// <param name="aabb2">AABB 2</param>
-        /// <param name="position1">坐标 1</param>
-        /// <param name="position2">坐标 2</param>
         /// <returns>YES/NO</returns>
-        public static bool DetectAABB(AABB aabb1, AABB aabb2, FPVector3 position1, FPVector3 position2)
+        public static bool DetectAABB(AABB aabb1, AABB aabb2)
         {
-            FPVector3 min1 = position1 + aabb1.center - aabb1.size * FP.Half;
-            FPVector3 max1 = position1 + aabb1.center + aabb1.size * FP.Half;
-            FPVector3 min2 = position2 + aabb2.center - aabb2.size * FP.Half;
-            FPVector3 max2 = position2 + aabb2.center + aabb2.size * FP.Half;
+            FPVector3 min1 = aabb1.position - aabb1.size * FP.Half;
+            FPVector3 max1 = aabb1.position + aabb1.size * FP.Half;
+            FPVector3 min2 = aabb2.position - aabb2.size * FP.Half;
+            FPVector3 max2 = aabb2.position + aabb2.size * FP.Half;
 
             return (
                 min1.x < max2.x && max1.x > min2.x &&
@@ -41,13 +39,13 @@ namespace Kowtow.Collision
         /// <param name="normal">从刚体 2 指向刚体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>YES/NO</returns>
-        public static bool Detect(Rigidbody rigidbody1, Rigidbody rigidbody2, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        public static bool Detect(Rigidbody rigidbody1, Rigidbody rigidbody2, out FPVector3 point, out FPVector3 normal, out FP penetration)    
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
-            if (false == DetectAABB(rigidbody1.aabb, rigidbody2.aabb, rigidbody1.position, rigidbody2.position)) return false;
+            if (false == DetectAABB(rigidbody1.aabb, rigidbody2.aabb)) return false;
 
             return Detect(rigidbody1.shape, rigidbody2.shape, rigidbody1.position, rigidbody2.position, rigidbody1.rotation, rigidbody2.rotation, out point, out normal, out penetration, false);
         }
@@ -74,10 +72,10 @@ namespace Kowtow.Collision
             // AABB 检测
             if (aabb)
             {
-                var aabb1 = AABB.CreateFromShape(shape1, rotation1);
-                var aabb2 = AABB.CreateFromShape(shape2, rotation2);
+                var aabb1 = AABB.CreateFromShape(shape1, position1, rotation1);
+                var aabb2 = AABB.CreateFromShape(shape2, position2, rotation2);
                 
-                if (false == DetectAABB(aabb1, aabb2, position1, position2)) return false;
+                if (false == DetectAABB(aabb1, aabb2)) return false;
             }
 
             position1 += shape1.center;

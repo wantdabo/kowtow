@@ -3,6 +3,8 @@ using Kowtow.Collision.Shapes;
 using Kowtow.Math;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Kowtow
 {
@@ -14,7 +16,7 @@ namespace Kowtow
         /// <summary>
         /// 八叉树
         /// </summary>
-        public Octree octree { get; private set; }
+        public Octree tree { get; private set; }
         /// <summary>
         /// 重力
         /// </summary>
@@ -33,7 +35,7 @@ namespace Kowtow
         /// <param name="gravity">重力</param>
         public World(FPVector3 gravity = default)
         {
-            octree = new();
+            tree = new();
             this.gravity = gravity;
         }
 
@@ -49,6 +51,7 @@ namespace Kowtow
             Rigidbody rigidbody = new(shape, mass, material);
             rigidbody.world = this;
             rigidbodies.Add(rigidbody);
+            tree.Rigidbody2Node(rigidbody);
 
             return rigidbody;
         }
@@ -60,6 +63,7 @@ namespace Kowtow
         public void RmvRigidbody(Rigidbody rigidbody)
         {
             if (false == rigidbodies.Contains(rigidbody)) return;
+            tree.RmvRigidbody(rigidbody);
             rigidbody.world = null;
             rigidbodies.Remove(rigidbody);
         }
@@ -72,33 +76,44 @@ namespace Kowtow
         {
             if (FP.Zero == t) return;
             timestep = t;
-
-            Detections();
-            NotifyEvents();
             
+            Detections();
             foreach (var rigidbody in rigidbodies)
             {
-                rigidbody.Update(t);
+                rigidbody.NotifyColliderEvents();
+                if (rigidbody.aabbupdated)
+                {
+                    tree.AABBUpdate(rigidbody);
+                    rigidbody.aabbupdated = false;
+                }
             }
+            Parallel.ForEach(rigidbodies, rigidbody =>
+            {
+                rigidbody.Update(t);
+            });
         }
-
+        
         /// <summary>
         /// 碰撞检测
         /// </summary>
         private void Detections()
         {
-            foreach (var self in rigidbodies)
+            Parallel.ForEach(rigidbodies, self =>
             {
                 self.ResetColliders();
-                foreach (var target in rigidbodies)
+
+                if (false == tree.QueryRigidbodies(self, out var bodies)) return;
+
+                foreach (var target in bodies)
                 {
                     if (self == target) continue;
-                    
+                
                     // 层级检测
                     if (false == Layer.Query(self.layer, target.layer)) continue;
+                
                     // 精确碰撞检测
                     if (false == Detection.Detect(self, target, out var point, out var normal, out var penetration)) continue;
-
+                
                     self.AddCollider(new Collider
                     {
                         rigidbody = target,
@@ -107,18 +122,7 @@ namespace Kowtow
                         penetration = penetration
                     });
                 }
-            }
-        }
-        
-        /// <summary>
-        /// 通知碰撞事件
-        /// </summary>
-        private void NotifyEvents()
-        {
-            foreach (var rigidbody in rigidbodies)
-            {
-                rigidbody.NotifyColliderEvents();
-            }
+            });
         }
     }
 }

@@ -101,10 +101,22 @@ namespace Kowtow
         /// 重力缩放
         /// </summary>
         public FP gravityScale { get; set; } = FP.One;
+        private FPVector3 mposition { get; set; }
         /// <summary>
         /// 位置
         /// </summary>
-        public FPVector3 position { get; set; }
+        public FPVector3 position
+        {
+            get
+            {
+                return mposition;
+            }
+            set
+            {
+                mposition = value;
+                UpdateAABB();
+            }
+        }
         private FPQuaternion mrotation { get; set; }
         /// <summary>
         /// 旋转
@@ -138,7 +150,10 @@ namespace Kowtow
         /// 碰撞关系列表
         /// </summary>
         private List<Collider> colliders = new();
-
+        /// <summary>
+        /// AABB 变化了
+        /// </summary>
+        public bool aabbupdated { get; set; } = false;
         /// <summary>
         /// Collision 进入事件
         /// </summary>
@@ -177,13 +192,14 @@ namespace Kowtow
             this.material = material;
             UpdateAABB();
         }
-        
+
         /// <summary>
         /// 更新 AABB 包围盒
         /// </summary>
         private void UpdateAABB()
         {
             aabb = AABB.CreateFromRigidbody(this);
+            aabbupdated = true;
         }
 
         /// <summary>
