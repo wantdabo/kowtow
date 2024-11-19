@@ -187,7 +187,7 @@ namespace Kowtow.Collision
         /// <param name="trigger">检测 Trigger</param>
         /// <param name="layer">层级 (-1, 默认全检测)</param>
         /// <returns>结果</returns>
-        public HitResult OverlapCapsule(FPVector3 position, FPQuaternion rotation, FP height, FP radius, bool trigger = true, int layer = -1)
+        public HitResult OverlapCylinder(FPVector3 position, FPQuaternion rotation, FP height, FP radius, bool trigger = true, int layer = -1)
         {
             CylinderShape cylinder = new CylinderShape(position, height, radius);
             var aabb = AABB.CreateFromShape(cylinder, position, rotation);
