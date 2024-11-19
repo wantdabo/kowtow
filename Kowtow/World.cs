@@ -18,6 +18,10 @@ namespace Kowtow
         /// </summary>
         public Octree tree { get; private set; }
         /// <summary>
+        /// 物理
+        /// </summary>
+        public Phys phys { get; private set; }
+        /// <summary>
         /// 重力
         /// </summary>
         public FPVector3 gravity { get; set; }
@@ -36,6 +40,7 @@ namespace Kowtow
         public World(FPVector3 gravity = default)
         {
             tree = new();
+            phys = new(tree);
             this.gravity = gravity;
         }
 
@@ -77,7 +82,6 @@ namespace Kowtow
             if (FP.Zero == t) return;
             timestep = t;
             
-            Detections();
             foreach (var rigidbody in rigidbodies)
             {
                 rigidbody.NotifyColliderEvents();
@@ -87,6 +91,7 @@ namespace Kowtow
                     rigidbody.aabbupdated = false;
                 }
             }
+            Detections();
             Parallel.ForEach(rigidbodies, rigidbody =>
             {
                 rigidbody.Update(t);

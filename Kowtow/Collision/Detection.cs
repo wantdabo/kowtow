@@ -39,7 +39,7 @@ namespace Kowtow.Collision
         /// <param name="normal">从刚体 2 指向刚体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>YES/NO</returns>
-        public static bool Detect(Rigidbody rigidbody1, Rigidbody rigidbody2, out FPVector3 point, out FPVector3 normal, out FP penetration)    
+        public static bool Detect(Rigidbody rigidbody1, Rigidbody rigidbody2, out FPVector3 point, out FPVector3 normal, out FP penetration)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
@@ -63,18 +63,18 @@ namespace Kowtow.Collision
         /// <param name="normal">从几何体 2 指向几何体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>YES/NO</returns>
-        public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabb = true)
+        public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
             penetration = FP.MaxValue;
 
             // AABB 检测
-            if (aabb)
+            if (aabbdetect)
             {
                 var aabb1 = AABB.CreateFromShape(shape1, position1, rotation1);
                 var aabb2 = AABB.CreateFromShape(shape2, position2, rotation2);
-                
+
                 if (false == DetectAABB(aabb1, aabb2)) return false;
             }
 
@@ -409,14 +409,223 @@ namespace Kowtow.Collision
             return true;
         }
 
-        private static FPVector3 ClosestPointOnLine(FPVector3 lineStart, FPVector3 lineEnd, FPVector3 point)
+        public static bool DetectLineShape(FPVector3 start, FPVector3 end, Shape shape, FPVector3 position, FPQuaternion rotation, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
         {
-            FPVector3 lineDirection = (lineEnd - lineStart).normalized;
-            FP projection = FPVector3.Dot(point - lineStart, lineDirection);
-            projection = FP.Clamp(projection, FP.Zero, FPVector3.Distance(lineStart, lineEnd));
-            return lineStart + lineDirection * projection;
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
+
+            FPVector3 direction = end - start;
+            FP distance = direction.magnitude;
+            FPVector3 ray = direction.normalized;
+
+            if (aabbdetect)
+            {
+                FPVector3 min = FPVector3.Min(start, end);
+                FPVector3 max = FPVector3.Max(start, end);
+                AABB aabb = new AABB()
+                {
+                    position = (min + max) * FP.Half,
+                    size = max - min
+                };
+                if (false == DetectAABB(aabb, AABB.CreateFromShape(shape, position, rotation))) return false;
+            }
+
+            if (shape is BoxShape)
+            {
+                return DetectBoxRay(shape as BoxShape, position, rotation, start, ray, distance, out point, out normal, out penetration);
+            }
+            else if (shape is SphereShape)
+            {
+                return DetectSphereRay(shape as SphereShape, position, start, ray, distance, out point, out normal, out penetration);
+            }
+            else if (shape is CylinderShape)
+            {
+                return DetectCylinderRay(shape as CylinderShape, position, rotation, start, ray, distance, out point, out normal, out penetration);
+            }
+
+            return false;
         }
 
+        private static bool DetectBoxRay(BoxShape box, FPVector3 position, FPQuaternion rotation, FPVector3 start, FPVector3 ray, FP distance, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        {
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
+
+            // 修正盒子的实际位置，加入 center 属性
+            FPVector3 boxCenter = position + box.center;
+
+            FPVector3[] axes = GetAxes(rotation);
+            FPVector3 halfSize = box.size * FP.Half;
+
+            FP minDistance = FP.MaxValue;
+            bool hit = false;
+
+            for (int i = 0; i < 3; i++)
+            {
+                FPVector3 axis = axes[i];
+                FP halfSizeComponent = i == 0 ? halfSize.x : (i == 1 ? halfSize.y : halfSize.z);
+
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    // 修正平面位置计算
+                    FPVector3 planePoint = boxCenter + axis * halfSizeComponent * j;
+                    FP d = FPVector3.Dot(planePoint - start, axis) / FPVector3.Dot(ray, axis);
+
+                    if (d >= 0 && d <= distance)
+                    {
+                        FPVector3 hitPoint = start + ray * d;
+                        bool inside = true;
+
+                        for (int k = 0; k < 3; k++)
+                        {
+                            if (k == i) continue;
+                            FPVector3 otherAxis = axes[k];
+                            FP extent = k == 0 ? halfSize.x : (k == 1 ? halfSize.y : halfSize.z);
+                            FP projection = FPVector3.Dot(hitPoint - boxCenter, otherAxis);
+
+                            if (FP.Abs(projection) > extent)
+                            {
+                                inside = false;
+                                break;
+                            }
+                        }
+
+                        if (inside && d < minDistance)
+                        {
+                            minDistance = d;
+                            point = hitPoint;
+                            normal = axis * j;
+                            hit = true;
+                        }
+                    }
+                }
+            }
+
+            if (hit)
+            {
+                penetration = distance - minDistance;
+                return true;
+            }
+
+            return false;
+        }
+
+
+        private static bool DetectSphereRay(SphereShape sphere, FPVector3 position, FPVector3 start, FPVector3 ray, FP distance, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        {
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
+
+            // 修正球体中心点，加入 center 属性
+            FPVector3 sphereCenter = position + sphere.center;
+
+            // 计算射线与球体中心的方向
+            FPVector3 direction = sphereCenter - start;
+            FP projection = FPVector3.Dot(direction, ray);
+
+            // 如果射线的投影小于 0，表示射线背向球体
+            if (projection < FP.Zero)
+                return false;
+
+            // 计算射线上与球体中心最近的点
+            FPVector3 pointOnRay = start + ray * projection;
+
+            // 检查射线与球体的距离是否在允许范围内
+            FP currentDistance = FPVector3.Distance(pointOnRay, sphereCenter);
+            if (currentDistance > sphere.radius || projection > distance)
+                return false;
+
+            // 计算碰撞点、法线和穿透深度
+            point = pointOnRay;
+            normal = (pointOnRay - sphereCenter).normalized;
+            penetration = sphere.radius - currentDistance;
+
+            return true;
+        }
+
+        private static bool DetectCylinderRay(CylinderShape cylinder, FPVector3 position, FPQuaternion rotation, FPVector3 start, FPVector3 ray, FP distance, out FPVector3 point, out FPVector3 normal, out FP penetration)
+        {
+            point = FPVector3.zero;
+            normal = FPVector3.zero;
+            penetration = FP.MaxValue;
+
+            // 计算旋转后的圆柱轴方向
+            FPVector3 cylinderAxis = rotation * FPVector3.up;
+
+            // 圆柱的实际位置是 position + center
+            FPVector3 adjustedPosition = position + cylinder.center; // 将中心点纳入位置计算
+            FPVector3 top = adjustedPosition + cylinderAxis * (cylinder.height * FP.Half);
+            FPVector3 bottom = adjustedPosition - cylinderAxis * (cylinder.height * FP.Half);
+
+            FP radius = cylinder.radius;
+
+            // 计算圆柱轴线上距离射线起点最近的点
+            FPVector3 closestPointOnAxis = ClosestPointOnLine(top, bottom, start);
+            FPVector3 directionToAxis = closestPointOnAxis - start;
+            FP projectionOnRay = FPVector3.Dot(directionToAxis, ray);
+
+            // 如果射线与圆柱轴方向的投影不在射线范围内，返回无碰撞
+            if (projectionOnRay < 0 || projectionOnRay > distance)
+            {
+                return false;
+            }
+
+            FPVector3 pointOnRay = start + ray * projectionOnRay;
+            FPVector3 pointOnCylinder = ClosestPointOnLine(top, bottom, pointOnRay);
+
+            // 检查射线与圆柱的距离
+            FP currentDistance = FPVector3.Distance(pointOnRay, pointOnCylinder);
+            if (currentDistance > radius)
+            {
+                return false;
+            }
+
+            // 计算碰撞点、法线和穿透深度
+            point = pointOnRay;
+            normal = (pointOnRay - pointOnCylinder).normalized;
+            penetration = radius - currentDistance;
+
+            return true;
+        }
+
+
+        private static FPVector3 ClosestPointOnBox(FPVector3 vertex, FPVector3 position, FPQuaternion rotation, FPVector3 halfSize)
+        {
+            // 通过旋转计算盒子的局部轴
+            FPVector3[] axes = GetAxes(rotation);
+
+            // 初始化最近点为盒子中心点
+            FPVector3 closestPoint = position;
+
+            // 遍历每个局部轴，投影点到轴上，并限制范围
+            for (int i = 0; i < 3; i++) // 仅对 X, Y, Z 轴
+            {
+                // 获取当前轴的半边长
+                FP halfExtent = (i == 0) ? halfSize.x : (i == 1) ? halfSize.y : halfSize.z;
+
+                // 计算点到盒子中心点的向量在当前轴上的投影
+                FP projection = FPVector3.Dot(vertex - position, axes[i]);
+
+                // 限制投影在盒子半边长范围内
+                projection = FP.Clamp(projection, -halfExtent, halfExtent);
+
+                // 将限制后的投影值加回到最近点上
+                closestPoint += axes[i] * projection;
+            }
+
+            return closestPoint;
+        }
+
+        private static FPVector3 ClosestPointOnLine(FPVector3 start, FPVector3 end, FPVector3 point)
+        {
+            FPVector3 lineDirection = (end - start).normalized;
+            FP projection = FPVector3.Dot(point - start, lineDirection);
+            projection = FP.Clamp(projection, 0, FPVector3.Distance(start, end)); // 确保投影点在轴线范围内
+            return start + lineDirection * projection;
+        }
 
         private static (FP min, FP max) ProjectCylinderOntoAxis(CylinderShape cylinder, FPVector3 position, FPQuaternion rotation, FPVector3 axis)
         {
@@ -438,7 +647,7 @@ namespace Kowtow.Collision
             FPVector3 right = rotation * FPVector3.right;
             FPVector3 up = rotation * FPVector3.up;
             FPVector3 forward = rotation * FPVector3.forward;
-            return new FPVector3[] { right, up, forward };
+            return new[] { right, up, forward };
         }
 
         private static (FP min, FP max) ProjectBoxOntoAxis(BoxShape box, FPVector3 position, FPQuaternion rotation, FPVector3 axis)

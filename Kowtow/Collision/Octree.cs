@@ -155,6 +155,24 @@ namespace Kowtow.Collision
         }
 
         /// <summary>
+        /// 查询同空间的刚体集合
+        /// </summary>
+        /// <param name="aabb">AABB 包围盒</param>
+        /// <param name="nearbybodies">相邻刚体列表</param>
+        /// <returns>YES/NO</returns>
+        public bool QueryRigidbodies(AABB aabb, out List<Rigidbody> nearbybodies)
+        {
+            nearbybodies = default;
+            if (false == AABB.Inside(aabb, root.aabb)) return false;
+
+            nearbybodies = new();
+            if (null != root.rigidbodies) nearbybodies.AddRange(root.rigidbodies);
+            ChildRigidbodies(root, aabb, nearbybodies);
+
+            return true;
+        }
+
+        /// <summary>
         /// 获取树子节点下的所有刚体
         /// </summary>
         /// <param name="node">树节点</param>
@@ -167,8 +185,33 @@ namespace Kowtow.Collision
             for (int i = 0; i < node.childs.Length; i++)
             {
                 var child = node.childs[i];
+                
+                if (null == child.rigidbodies) continue;
+                
                 nearbybodies.AddRange(child.rigidbodies);
                 ChildRigidbodies(child, nearbybodies);
+            }
+        }
+        
+        /// <summary>
+        /// 获取树子节点下的所有刚体
+        /// </summary>
+        /// <param name="node">树节点</param>
+        /// <param name="aabb">AABB 包围盒</param>
+        /// <param name="nearbybodies">相邻刚体列表</param>
+        private void ChildRigidbodies(OTNode node, AABB aabb, List<Rigidbody> nearbybodies)
+        {
+            if (null == node) return;
+            if (null == node.childs) return;
+            
+            for (int i = 0; i < node.childs.Length; i++)
+            {
+                var child = node.childs[i];
+                if (null == child.rigidbodies) continue;
+                if (false == AABB.Inside(aabb, child.aabb)) continue;
+                
+                nearbybodies.AddRange(child.rigidbodies);
+                ChildRigidbodies(child, aabb, nearbybodies);
             }
         }
         
