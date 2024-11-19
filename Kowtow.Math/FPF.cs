@@ -16,9 +16,6 @@ namespace Kowtow.Math
         public const float PI_TIMES_2 = 6.28318530718f;
         public const float PI = 3.141592653589793f;
         public const float PI_OVER_2 = 1.5707963267948966f;
-        public const float LN2 = 0xB17217F7;
-        public const float LOG2MAX = 0x1F00000000;
-        public const float LOG2MIN = -0x2000000000;
 
         public static readonly FP MaxValue = new FP(MAX_VALUE - 1);
         public static readonly FP MinValue = new FP(MIN_VALUE + 2);
@@ -54,10 +51,6 @@ namespace Kowtow.Math
 
         public static readonly FP Rad2Deg = new FP(180) / Pi;
 
-        public static readonly FP Log2Max = new FP(LOG2MAX);
-        public static readonly FP Log2Min = new FP(LOG2MIN);
-        public static readonly FP Ln2 = new FP(LN2);
-        
         /// <summary>
         /// Returns 2 raised to the specified power.
         /// Provides at least 6 decimals of accuracy.
@@ -77,18 +70,6 @@ namespace Kowtow.Math
         public static FP Log2(FP x)
         {
             return new FP(float.Log2(x.rawvalue));
-        }
-
-        /// <summary>
-        /// Returns the natural logarithm of a specified number.
-        /// Provides at least 7 decimals of accuracy.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// The argument was non-positive
-        /// </exception>
-        public static FP Ln(FP x)
-        {
-            return FP.FastMul(Log2(x), FP.Ln2);
         }
 
         /// <summary>

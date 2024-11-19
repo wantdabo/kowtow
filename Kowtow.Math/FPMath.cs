@@ -331,18 +331,6 @@ namespace Kowtow.Math {
         }
 
         /// <summary>
-        /// Returns the natural logarithm of a specified number.
-        /// Provides at least 7 decimals of accuracy.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// The argument was non-positive
-        /// </exception>
-        public static FP Ln(FP x)
-        {
-            return FP.FastMul(Log2(x), FP.Ln2);
-        }
-
-        /// <summary>
         /// Returns a specified number raised to the specified power.
         /// Provides about 5 digits of accuracy for the result.
         /// </summary>
