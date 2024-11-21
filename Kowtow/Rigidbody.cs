@@ -22,6 +22,21 @@ namespace Kowtow
     }
 
     /// <summary>
+    /// 碰撞检测类型
+    /// </summary>
+    public enum DetectionType
+    {
+        /// <summary>
+        /// 离散的
+        /// </summary>
+        Discrete,
+        /// <summary>
+        /// 连续的
+        /// </summary>
+        Continuous,
+    }
+
+    /// <summary>
     /// 刚体
     /// </summary>
     public class Rigidbody
@@ -34,6 +49,10 @@ namespace Kowtow
         /// 刚体类型
         /// </summary>
         public RigidbodyType type { get; set; } = RigidbodyType.Static;
+        /// <summary>
+        /// 碰撞检测类型
+        /// </summary>
+        public DetectionType detection { get; set; } = DetectionType.Discrete;
         /// <summary>
         /// 世界
         /// </summary>
@@ -299,7 +318,7 @@ namespace Kowtow
             // 计算加速
             var acceleration = force * inverseMass;
             force = FPVector3.zero;
-            // 增加加速
+            // 增加速度
             velocity += acceleration * t;
             // 速度阻尼
             velocity *= (FP.One - drag * t);

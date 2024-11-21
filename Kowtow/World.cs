@@ -34,6 +34,10 @@ namespace Kowtow
         /// </summary>
         private List<Rigidbody> rigidbodies = new();
         /// <summary>
+        /// 上一帧刚体位置和旋转
+        /// </summary>
+        private Dictionary<Rigidbody, (FPVector3 position, FPQuaternion rotation)> preframetrans = new();
+        /// <summary>
         /// 世界构造函数
         /// </summary>
         /// <param name="gravity">重力</param>
@@ -67,6 +71,8 @@ namespace Kowtow
         /// <param name="rigidbody">刚体</param>
         public void RmvRigidbody(Rigidbody rigidbody)
         {
+            if (preframetrans.ContainsKey(rigidbody)) preframetrans.Remove(rigidbody);
+
             if (false == rigidbodies.Contains(rigidbody)) return;
             tree.RmvRigidbody(rigidbody);
             rigidbody.world = null;
@@ -81,23 +87,31 @@ namespace Kowtow
         {
             if (FP.Zero == t) return;
             timestep = t;
-            
+
+            Parallel.ForEach(rigidbodies, rigidbody =>
+            {
+                rigidbody.Update(t);
+            });
+            Detections();
+
             foreach (var rigidbody in rigidbodies)
             {
+                // 事件通知
                 rigidbody.NotifyColliderEvents();
+                
+                // 变化缓存
+                if (preframetrans.ContainsKey(rigidbody)) preframetrans.Remove(rigidbody);
+                preframetrans.Add(rigidbody, (rigidbody.position, rigidbody.rotation));
+                
+                // AABB 更新树
                 if (rigidbody.aabbupdated)
                 {
                     tree.AABBUpdate(rigidbody);
                     rigidbody.aabbupdated = false;
                 }
             }
-            Detections();
-            Parallel.ForEach(rigidbodies, rigidbody =>
-            {
-                rigidbody.Update(t);
-            });
         }
-        
+
         /// <summary>
         /// 碰撞检测
         /// </summary>
@@ -112,22 +126,92 @@ namespace Kowtow
                 foreach (var target in bodies)
                 {
                     if (self == target) continue;
-                
+
                     // 层级检测
                     if (false == Layer.Query(self.layer, target.layer)) continue;
-                
-                    // 精确碰撞检测
-                    if (false == Detection.Detect(self, target, out var point, out var normal, out var penetration)) continue;
-                
-                    self.AddCollider(new Collider
+
+                    // TOI 检测/连续碰撞检测
+                    if (RigidbodyType.Dynamic == self.type && DetectionType.Continuous == self.detection)
                     {
-                        rigidbody = target,
-                        point = point,
-                        normal = normal,
-                        penetration = penetration
-                    });
+                        ContinuousDetection(self, target);
+                        return;
+                    }
+
+                    // 离散碰撞检测
+                    DiscreteDetection(self, target);
                 }
             });
+        }
+
+        /// <summary>
+        /// 离散碰撞检测
+        /// </summary>
+        /// <param name="self">自身 Rigidbody</param>
+        /// <param name="target">目标 Rigidbody</param>
+        private void DiscreteDetection(Rigidbody self, Rigidbody target)
+        {
+            if (false == Detection.Detect(self, target, out var point, out var normal, out var penetration)) return;
+
+            self.AddCollider(new Collider
+            {
+                rigidbody = target,
+                point = point,
+                normal = normal,
+                penetration = penetration
+            });
+        }
+
+        /// <summary>
+        /// 连续碰撞检测
+        /// </summary>
+        /// <param name="self">自身 Rigidbody</param>
+        /// <param name="target">目标 Rigidbody</param>
+        private void ContinuousDetection(Rigidbody self, Rigidbody target)
+        {
+            if (false == preframetrans.TryGetValue(self, out var selftrans))
+            {
+                selftrans.position = self.position;
+                selftrans.rotation = self.rotation;
+            }
+            if (false == preframetrans.TryGetValue(target, out var targettrans))
+            {
+                targettrans.position = target.position;
+                targettrans.rotation = target.rotation;
+            }
+            
+            // 获取刚体的运动起始和结束位置
+            FPVector3 startA = selftrans.position;
+            FPVector3 endA = self.position + self.velocity * timestep;
+            FPQuaternion startRotA = selftrans.rotation;
+            FPQuaternion endRotA = self.rotation;
+
+            FPVector3 startB = targettrans.position;
+            FPVector3 endB = target.position;
+            FPQuaternion startRotB = targettrans.rotation;
+            FPQuaternion endRotB = target.rotation;
+
+            // 执行时间插值检测
+            if (false == Detection.Sweep(self, target, startA, endA, startB, endB, startRotA, endRotA, startRotB, endRotB, out FP toi)) return;
+            
+            // 在碰撞时刻更新刚体状态
+            FPVector3 collisionPositionA = FPVector3.Lerp(startA, endA, toi);
+            FPQuaternion collisionRotationA = FPQuaternion.Slerp(startRotA, endRotA, toi);
+            FPVector3 collisionPositionB = FPVector3.Lerp(startB, endB, toi);
+            FPQuaternion collisionRotationB = FPQuaternion.Slerp(startRotB, endRotB, toi);
+            
+            self.position = collisionPositionA;
+            // 计算碰撞点、法线、以及穿透深度
+            if (Detection.Detect(self.shape, target.shape, collisionPositionA, collisionPositionB, collisionRotationA, collisionRotationB, out var point, out var normal, out var penetration))
+            {
+                // 添加碰撞器信息
+                self.AddCollider(new Collider
+                {
+                    rigidbody = target,
+                    point = point,
+                    normal = normal,
+                    penetration = penetration
+                });
+            }
         }
     }
 }

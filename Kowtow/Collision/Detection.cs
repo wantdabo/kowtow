@@ -31,6 +31,144 @@ namespace Kowtow.Collision
         }
 
         /// <summary>
+        /// 检测两个 AABB 是否在给定运动路径上相交（考虑旋转）
+        /// </summary>
+        /// <param name="a">AABB A</param>
+        /// <param name="b">AABB B</param>
+        /// <param name="startA">A 的起始位置</param>
+        /// <param name="endA">A 的结束位置</param>
+        /// <param name="startRotA">A 的起始旋转</param>
+        /// <param name="endRotA">A 的结束旋转</param>
+        /// <param name="startB">B 的起始位置</param>
+        /// <param name="endB">B 的结束位置</param>
+        /// <param name="startRotB">B 的起始旋转</param>
+        /// <param name="endRotB">B 的结束旋转</param>
+        /// <returns>YES/NO</returns>
+        public static bool SweepAABB(AABB a, AABB b, FPVector3 startA, FPVector3 endA, FPQuaternion startRotA, FPQuaternion endRotA, FPVector3 startB, FPVector3 endB, FPQuaternion startRotB, FPQuaternion endRotB)
+        {
+            // 计算扩展的 AABB（考虑旋转）
+            AABB expandedA = ExpandedAABB(a, startA, endA, startRotA, endRotA);
+            AABB expandedB = ExpandedAABB(b, startB, endB, startRotB, endRotB);
+
+            return DetectAABB(expandedA, expandedB);
+        }
+
+        /// <summary>
+        /// 计算扩展的 AABB，以覆盖刚体的运动路径（同时考虑位置和旋转的变化）
+        /// </summary>
+        /// <param name="aabb">原始 AABB</param>
+        /// <param name="start">起始位置</param>
+        /// <param name="end">结束位置</param>
+        /// <param name="startRot">起始旋转</param>
+        /// <param name="endRot">结束旋转</param>
+        /// <returns>扩展后的 AABB</returns>
+        private static AABB ExpandedAABB(AABB aabb, FPVector3 start, FPVector3 end, FPQuaternion startRot, FPQuaternion endRot)
+        {
+            // 计算起始和结束旋转作用后的 AABB
+            AABB startAABB = RotateAABB(aabb, startRot);
+            startAABB.position += start; // 将起始 AABB 移动到起始位置
+
+            AABB endAABB = RotateAABB(aabb, endRot);
+            endAABB.position += end; // 将结束 AABB 移动到结束位置
+
+            // 计算包围盒的最小点和最大点，综合考虑位置和旋转
+            FPVector3 min = FPVector3.Min(startAABB.position - startAABB.size * FP.Half, endAABB.position - endAABB.size * FP.Half);
+            FPVector3 max = FPVector3.Max(startAABB.position + startAABB.size * FP.Half, endAABB.position + endAABB.size * FP.Half);
+
+            // 返回扩展后的 AABB
+            return new AABB
+            {
+                position = (min + max) * FP.Half,
+                size = max - min
+            };
+        }
+
+        /// <summary>
+        /// 根据旋转调整 AABB 的范围
+        /// </summary>
+        /// <param name="aabb">原始 AABB</param>
+        /// <param name="rotation">旋转</param>
+        /// <returns>调整后的 AABB</returns>
+        private static AABB RotateAABB(AABB aabb, FPQuaternion rotation)
+        {
+            // 获取 AABB 的 8 个顶点
+            FPVector3 halfSize = aabb.size * FP.Half;
+            FPVector3[] vertices =
+            {
+                new(-halfSize.x, -halfSize.y, -halfSize.z),
+                new(halfSize.x, -halfSize.y, -halfSize.z),
+                new(-halfSize.x, halfSize.y, -halfSize.z),
+                new(halfSize.x, halfSize.y, -halfSize.z),
+                new(-halfSize.x, -halfSize.y, halfSize.z),
+                new(halfSize.x, -halfSize.y, halfSize.z),
+                new(-halfSize.x, halfSize.y, halfSize.z),
+                new(halfSize.x, halfSize.y, halfSize.z),
+            };
+
+            // 应用旋转，更新顶点的范围
+            FPVector3 min = FPVector3.MaxValue;
+            FPVector3 max = FPVector3.MinValue;
+
+            foreach (var vertex in vertices)
+            {
+                FPVector3 transformedVertex = rotation * vertex;
+                min = FPVector3.Min(min, transformedVertex);
+                max = FPVector3.Max(max, transformedVertex);
+            }
+
+            return new AABB
+            {
+                position = (min + max) * FP.Half,
+                size = max - min
+            };
+        }
+
+        /// <summary>
+        /// 检测两个 Rigidbody 是否在给定运动路径和旋转变化范围内发生碰撞，并返回碰撞时间点 TOI（Time of Impact）
+        /// </summary>
+        /// <param name="a">Rigidbody A</param>
+        /// <param name="b">Rigidbody B</param>
+        /// <param name="startA">A 的起始位置</param>
+        /// <param name="endA">A 的结束位置</param>
+        /// <param name="startB">B 的起始位置</param>
+        /// <param name="endB">B 的结束位置</param>
+        /// <param name="startRotA">A 的起始旋转</param>
+        /// <param name="endRotA">A 的结束旋转</param>
+        /// <param name="startRotB">B 的起始旋转</param>
+        /// <param name="endRotB">B 的结束旋转</param>
+        /// <param name="toi">碰撞时间点（归一化时间，0 到 1 范围内）</param>
+        /// <returns>YES/NO</returns>
+        public static bool Sweep(Rigidbody a, Rigidbody b, FPVector3 startA, FPVector3 endA, FPVector3 startB, FPVector3 endB, FPQuaternion startRotA, FPQuaternion endRotA, FPQuaternion startRotB, FPQuaternion endRotB, out FP toi)
+        {
+            toi = FP.One;
+
+            // 初步检测两个刚体的扩展 AABB 是否相交，若无相交直接返回 false
+            if (false == SweepAABB(a.aabb, b.aabb, startA, endA, startRotA, endRotA, startB, endB, startRotB, endRotB)) return false;
+
+            FP step = FP.Zero;
+            FP epsilon = FP.EN1;
+            while (true)
+            {
+                step += epsilon;
+                if (step > FP.One) break;
+                
+                FPVector3 positionA = FPVector3.Lerp(startA, endA, step);
+                FPVector3 positionB = FPVector3.Lerp(startB, endB, step);
+                FPQuaternion rotationA = FPQuaternion.Slerp(startRotA, endRotA, step);
+                FPQuaternion rotationB = FPQuaternion.Slerp(startRotB, endRotB, step);
+                
+                if (Detect(a.shape, b.shape, positionA, positionB, rotationA, rotationB, out _, out _, out _, false))
+                {
+                    toi = step;
+                    break;
+                }
+            }
+            
+            // 返回是否找到了有效的碰撞时间点
+            return toi < FP.One;
+        }
+
+        /// <summary>
         /// 刚体与刚体碰撞检测
         /// </summary>
         /// <param name="rigidbody1">刚体 1</param>
@@ -589,34 +727,6 @@ namespace Kowtow.Collision
             penetration = radius - currentDistance;
 
             return true;
-        }
-
-
-        private static FPVector3 ClosestPointOnBox(FPVector3 vertex, FPVector3 position, FPQuaternion rotation, FPVector3 halfSize)
-        {
-            // 通过旋转计算盒子的局部轴
-            FPVector3[] axes = GetAxes(rotation);
-
-            // 初始化最近点为盒子中心点
-            FPVector3 closestPoint = position;
-
-            // 遍历每个局部轴，投影点到轴上，并限制范围
-            for (int i = 0; i < 3; i++) // 仅对 X, Y, Z 轴
-            {
-                // 获取当前轴的半边长
-                FP halfExtent = (i == 0) ? halfSize.x : (i == 1) ? halfSize.y : halfSize.z;
-
-                // 计算点到盒子中心点的向量在当前轴上的投影
-                FP projection = FPVector3.Dot(vertex - position, axes[i]);
-
-                // 限制投影在盒子半边长范围内
-                projection = FP.Clamp(projection, -halfExtent, halfExtent);
-
-                // 将限制后的投影值加回到最近点上
-                closestPoint += axes[i] * projection;
-            }
-
-            return closestPoint;
         }
 
         private static FPVector3 ClosestPointOnLine(FPVector3 start, FPVector3 end, FPVector3 point)

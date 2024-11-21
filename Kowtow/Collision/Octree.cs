@@ -143,7 +143,7 @@ namespace Kowtow.Collision
             if (null == node) return false;
 
             nearbybodies = new();
-            var p = node.parent;
+            var p = node;
             while (null != p)
             {
                 if (null != p.rigidbodies) nearbybodies.AddRange(p.rigidbodies);
