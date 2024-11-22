@@ -7,8 +7,13 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Kowtow.Math\Kowtow.Math.csproj" />
-    </ItemGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE;FP;PARALLEL;</DefineConstants>
+      <Optimize>true</Optimize>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE;FP;PARALLEL;</DefineConstants>
+    </PropertyGroup>
 
 </Project>

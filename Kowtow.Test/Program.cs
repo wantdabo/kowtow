@@ -42,14 +42,14 @@ ball.type = RigidbodyType.Dynamic;
 // 设置为连续碰撞检测
 ball.detection = DetectionType.Continuous;
 
-// FPRandom random = FPRandom.New(19491001);
-// for (int i = 0; i < 1000; i++)
-// {
-//     var ball2 = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
-//     ball2.position = new FPVector3(random.Next(-50000, 50000), 10, random.Next(-50000, 50000));
-//     ball2.type = RigidbodyType.Dynamic;
-//     ball2.detection = DetectionType.Continuous;
-// }
+FPRandom random = FPRandom.New(19491001);
+for (int i = 0; i < 1000; i++)
+{
+    var ball2 = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
+    ball2.position = new FPVector3(random.Next(-50000, 50000), 10, random.Next(-50000, 50000));
+    ball2.type = RigidbodyType.Dynamic;
+    ball2.detection = DetectionType.Continuous;
+}
 
 var sw = Stopwatch.StartNew();
 // 驱动世界
@@ -61,6 +61,6 @@ while (true)
     sw.Stop();
     Console.Title = $"ms: {sw.ElapsedMilliseconds}";
     
-    Console.WriteLine($"{ball.position}, {ball.rotation.eulerAngles}, {ball.GetColliders().Count}");
+    Console.WriteLine($"{ball.position}, {ball.rotation.eulerAngles}, {ball.velocity}, {ball.GetColliders().Count}");
     Thread.Sleep(ms);
 }

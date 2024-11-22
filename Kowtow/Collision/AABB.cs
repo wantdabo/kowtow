@@ -23,25 +23,6 @@ namespace Kowtow.Collision
         }
 
         /// <summary>
-        /// 判断 AABB 2 是否包含另一个 AABB 1
-        /// </summary>
-        /// <param name="aabb1">AABB 1</param>
-        /// <param name="aabb2">AABB 2</param>
-        /// <returns>YES/NO</returns>
-        public static bool Inside(AABB aabb1, AABB aabb2)
-        {
-            FPVector3 min1 = aabb2.position - aabb2.size * FP.Half;
-            FPVector3 max1 = aabb2.position + aabb2.size * FP.Half;
-            FPVector3 min2 = aabb1.position - aabb1.size * FP.Half;
-            FPVector3 max2 = aabb1.position + aabb1.size * FP.Half;
-
-            return (
-                min1.x <= min2.x && min1.y <= min2.y && min1.z <= min2.z &&
-                max1.x >= max2.x && max1.y >= max2.y && max1.z >= max2.z
-            );
-        }
-
-        /// <summary>
         /// 从 Rigidbody 创建一个 AABB
         /// </summary>
         /// <param name="rigidbody">Rigidbody</param>
@@ -58,7 +39,7 @@ namespace Kowtow.Collision
         /// <param name="position">位置</param>
         /// <param name="rotation">旋转</param>
         /// <returns>AABB</returns>
-        public static AABB CreateFromShape(Shape shape, FPVector3 position, FPQuaternion rotation)
+        public static AABB CreateFromShape(IShape shape, FPVector3 position, FPQuaternion rotation)
         {
             if (shape is BoxShape box)
             {

@@ -5,8 +5,13 @@ namespace Kowtow.Collision.Shapes
     /// <summary>
     /// 立方体
     /// </summary>
-    public class BoxShape : Shape
+    public class BoxShape : IShape
     {
+        /// <summary>
+        /// 中心点
+        /// </summary>
+        public FPVector3 center { get; set; }
+
         /// <summary>
         /// 尺寸
         /// </summary>

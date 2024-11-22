@@ -61,11 +61,11 @@ namespace Kowtow
         /// 触发器 [开启后不会发生碰撞，但会触发事件]
         /// </summary>
         public bool trigger { get; set; }
-        private Shape mshape { get; set; }
+        private IShape mshape { get; set; }
         /// <summary>
         /// 几何体
         /// </summary>
-        public Shape shape
+        public IShape shape
         {
             get
             {
@@ -181,7 +181,7 @@ namespace Kowtow
         /// <param name="shape">几何体</param>
         /// <param name="mass">质量</param>
         /// <param name="material">物理材质</param>
-        public Rigidbody(Shape shape, FP mass, Material material)
+        public Rigidbody(IShape shape, FP mass, Material material)
         {
             this.shape = shape;
             this.mass = mass;

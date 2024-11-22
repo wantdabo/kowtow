@@ -11,6 +11,25 @@ namespace Kowtow.Collision
     public class Detection
     {
         /// <summary>
+        /// 判断 AABB 2 是否包含另一个 AABB 1
+        /// </summary>
+        /// <param name="aabb1">AABB 1</param>
+        /// <param name="aabb2">AABB 2</param>
+        /// <returns>YES/NO</returns>
+        public static bool InsideAABB(AABB aabb1, AABB aabb2)
+        {
+            FPVector3 min1 = aabb2.position - aabb2.size * FP.Half;
+            FPVector3 max1 = aabb2.position + aabb2.size * FP.Half;
+            FPVector3 min2 = aabb1.position - aabb1.size * FP.Half;
+            FPVector3 max2 = aabb1.position + aabb1.size * FP.Half;
+
+            return (
+                min1.x <= min2.x && min1.y <= min2.y && min1.z <= min2.z &&
+                max1.x >= max2.x && max1.y >= max2.y && max1.z >= max2.z
+            );
+        }
+        
+        /// <summary>
         /// AABB 碰撞检测
         /// </summary>
         /// <param name="aabb1">AABB 1</param>
@@ -145,6 +164,7 @@ namespace Kowtow.Collision
             // 初步检测两个刚体的扩展 AABB 是否相交，若无相交直接返回 false
             if (false == SweepAABB(a.aabb, b.aabb, startA, endA, startRotA, endRotA, startB, endB, startRotB, endRotB)) return false;
 
+            // TODO 优化，使用多线程，开始查找
             FP step = FP.Zero;
             FP epsilon = FP.EN1;
             while (true)
@@ -201,7 +221,7 @@ namespace Kowtow.Collision
         /// <param name="normal">从几何体 2 指向几何体 1 的法线</param>
         /// <param name="penetration">穿透深度</param>
         /// <returns>YES/NO</returns>
-        public static bool Detect(Shape shape1, Shape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
+        public static bool Detect(IShape shape1, IShape shape2, FPVector3 position1, FPVector3 position2, FPQuaternion rotation1, FPQuaternion rotation2, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;
@@ -547,7 +567,7 @@ namespace Kowtow.Collision
             return true;
         }
 
-        public static bool DetectLineShape(FPVector3 start, FPVector3 end, Shape shape, FPVector3 position, FPQuaternion rotation, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
+        public static bool DetectLineShape(FPVector3 start, FPVector3 end, IShape shape, FPVector3 position, FPQuaternion rotation, out FPVector3 point, out FPVector3 normal, out FP penetration, bool aabbdetect = true)
         {
             point = FPVector3.zero;
             normal = FPVector3.zero;

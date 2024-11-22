@@ -43,8 +43,9 @@ namespace Kowtow
         /// <param name="gravity">重力</param>
         public World(FPVector3 gravity = default)
         {
-            tree = new();
-            phys = new(tree);
+            tree = new(this);
+            phys = new(this, tree);
+
             this.gravity = gravity;
         }
 
@@ -55,7 +56,7 @@ namespace Kowtow
         /// <param name="mass">质量</param>
         /// <param name="material">物理材质</param>
         /// <returns>刚体</returns>
-        public Rigidbody AddRigidbody(Shape shape, FP mass, Material material)
+        public Rigidbody AddRigidbody(IShape shape, FP mass, Material material)
         {
             Rigidbody rigidbody = new(shape, mass, material);
             rigidbody.world = this;
@@ -88,21 +89,26 @@ namespace Kowtow
             if (FP.Zero == t) return;
             timestep = t;
 
+            Collisions();
+#if PARALLEL
             Parallel.ForEach(rigidbodies, rigidbody =>
             {
                 rigidbody.Update(t);
             });
-            Detections();
+#endif
 
             foreach (var rigidbody in rigidbodies)
             {
+#if !PARALLEL
+                rigidbody.Update(t);
+#endif
                 // 事件通知
                 rigidbody.NotifyColliderEvents();
-                
+
                 // 变化缓存
                 if (preframetrans.ContainsKey(rigidbody)) preframetrans.Remove(rigidbody);
                 preframetrans.Add(rigidbody, (rigidbody.position, rigidbody.rotation));
-                
+
                 // AABB 更新树
                 if (rigidbody.aabbupdated)
                 {
@@ -115,32 +121,51 @@ namespace Kowtow
         /// <summary>
         /// 碰撞检测
         /// </summary>
-        private void Detections()
+        private void Collisions()
         {
+#if PARALLEL
             Parallel.ForEach(rigidbodies, self =>
             {
                 self.ResetColliders();
 
                 if (false == tree.QueryRigidbodies(self, out var bodies)) return;
 
+                Parallel.ForEach(bodies, target =>
+                {
+                    Collision(self, target);
+                });
+            });
+#else
+            foreach (var self in rigidbodies)
+            {
+                self.ResetColliders();
+
+                if (false == tree.QueryRigidbodies(self, out var bodies)) continue;
+
                 foreach (var target in bodies)
                 {
-                    if (self == target) continue;
-
-                    // 层级检测
-                    if (false == Layer.Query(self.layer, target.layer)) continue;
-
-                    // TOI 检测/连续碰撞检测
-                    if (RigidbodyType.Dynamic == self.type && DetectionType.Continuous == self.detection)
-                    {
-                        ContinuousDetection(self, target);
-                        return;
-                    }
-
-                    // 离散碰撞检测
-                    DiscreteDetection(self, target);
+                    Collision(self, target);
                 }
-            });
+            }
+#endif
+        }
+
+        private void Collision(Rigidbody self, Rigidbody target)
+        {
+            if (self == target) return;
+
+            // 层级检测
+            if (false == Layer.Query(self.layer, target.layer)) return;
+
+            // TOI 检测/连续碰撞检测
+            if (RigidbodyType.Dynamic == self.type && DetectionType.Continuous == self.detection)
+            {
+                ContinuousDetection(self, target);
+                return;
+            }
+
+            // 离散碰撞检测
+            DiscreteDetection(self, target);
         }
 
         /// <summary>
@@ -178,7 +203,7 @@ namespace Kowtow
                 targettrans.position = target.position;
                 targettrans.rotation = target.rotation;
             }
-            
+
             // 获取刚体的运动起始和结束位置
             FPVector3 startA = selftrans.position;
             FPVector3 endA = self.position + self.velocity * timestep;
@@ -192,13 +217,13 @@ namespace Kowtow
 
             // 执行时间插值检测
             if (false == Detection.Sweep(self, target, startA, endA, startB, endB, startRotA, endRotA, startRotB, endRotB, out FP toi)) return;
-            
+
             // 在碰撞时刻更新刚体状态
             FPVector3 collisionPositionA = FPVector3.Lerp(startA, endA, toi);
             FPQuaternion collisionRotationA = FPQuaternion.Slerp(startRotA, endRotA, toi);
             FPVector3 collisionPositionB = FPVector3.Lerp(startB, endB, toi);
             FPQuaternion collisionRotationB = FPQuaternion.Slerp(startRotB, endRotB, toi);
-            
+
             self.position = collisionPositionA;
             // 计算碰撞点、法线、以及穿透深度
             if (Detection.Detect(self.shape, target.shape, collisionPositionA, collisionPositionB, collisionRotationA, collisionRotationB, out var point, out var normal, out var penetration))

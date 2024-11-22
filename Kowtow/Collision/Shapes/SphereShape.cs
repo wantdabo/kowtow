@@ -5,8 +5,12 @@ namespace Kowtow.Collision.Shapes
     /// <summary>
     /// 球体
     /// </summary>
-    public class SphereShape : Shape
+    public class SphereShape : IShape
     {
+        /// <summary>
+        /// 中心点
+        /// </summary>
+        public FPVector3 center { get; set; }
         /// <summary>
         /// 半径
         /// </summary>

@@ -27,14 +27,20 @@ namespace Kowtow.Collision
         /// <summary>
         /// 世界
         /// </summary>
+        private World world { get; set; }
+        /// <summary>
+        /// 树
+        /// </summary>
         private Octree tree { get; set; }
 
         /// <summary>
         /// 物理构造函数
         /// </summary>
+        /// <param name="world">世界</param>
         /// <param name="tree">树</param>
-        public Phys(Octree tree)
+        public Phys(World world, Octree tree)
         {
+            this.world = world;
             this.tree = tree;
         }
 
@@ -83,7 +89,7 @@ namespace Kowtow.Collision
 
             return result;
         }
-        
+
         /// <summary>
         /// 射线检测
         /// </summary>
@@ -97,7 +103,7 @@ namespace Kowtow.Collision
         {
             return Linecast(origin, origin + direction * distance, trigger, layer);
         }
-        
+
         /// <summary>
         /// 立方体检测
         /// </summary>
@@ -137,7 +143,7 @@ namespace Kowtow.Collision
 
             return result;
         }
-        
+
         /// <summary>
         /// 球体检测
         /// </summary>
@@ -154,7 +160,7 @@ namespace Kowtow.Collision
             {
                 return default;
             }
-            
+
             HitResult result = new();
             foreach (var rigidbody in rigidbodies)
             {
@@ -176,7 +182,7 @@ namespace Kowtow.Collision
 
             return result;
         }
-        
+
         /// <summary>
         /// 圆柱体检测
         /// </summary>
@@ -195,7 +201,7 @@ namespace Kowtow.Collision
             {
                 return default;
             }
-            
+
             HitResult result = new();
             foreach (var rigidbody in rigidbodies)
             {
@@ -217,7 +223,7 @@ namespace Kowtow.Collision
 
             return result;
         }
-        
+
         /// <summary>
         /// 检测过滤
         /// </summary>

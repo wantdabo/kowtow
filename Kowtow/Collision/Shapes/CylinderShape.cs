@@ -5,8 +5,13 @@ namespace Kowtow.Collision.Shapes
     /// <summary>
     /// 圆柱体
     /// </summary>
-    public class CylinderShape : Shape
+    public class CylinderShape : IShape
     {
+        /// <summary>
+        /// 中心点
+        /// </summary>
+        public FPVector3 center { get; set; }
+        
         /// <summary>
         /// 高度
         /// </summary>

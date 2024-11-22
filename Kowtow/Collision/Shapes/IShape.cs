@@ -5,7 +5,7 @@ namespace Kowtow.Collision.Shapes
     /// <summary>
     /// 几何体
     /// </summary>
-    public abstract class Shape
+    public interface IShape
     {
         /// <summary>
         /// 中心点

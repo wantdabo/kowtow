@@ -56,6 +56,10 @@ namespace Kowtow.Collision
         /// </summary>
         public const int NODE_CAPACITY = 4;
         /// <summary>
+        /// 世界
+        /// </summary>
+        private World world { get; set; }
+        /// <summary>
         /// 根节点
         /// </summary>
         public OTNode root { get; private set; }
@@ -75,8 +79,10 @@ namespace Kowtow.Collision
         /// <summary>
         /// 八叉树构造函数
         /// </summary>
-        public Octree()
+        /// <param name="world">世界</param>
+        public Octree(World world)
         {
+            this.world = world;
             root = new OTNode();
             NodeSettings(null, -1, root);
         }
@@ -93,13 +99,13 @@ namespace Kowtow.Collision
                 rigidbodies.Add(rigidbody);
             }
 
-            if (false == AABB.Inside(rigidbody.aabb, root.aabb))
+            if (false == Detection.InsideAABB(rigidbody.aabb, root.aabb))
             {
                 throw new Exception($"out of range. otctree range [{MAX_SIZE}, {MAX_SIZE}, {MAX_SIZE}]");
             }
             Rigidbody2Node(rigidbody, root);
         }
-        
+
         /// <summary>
         /// 移除刚体
         /// </summary>
@@ -110,12 +116,12 @@ namespace Kowtow.Collision
             {
                 rigidbodies.Remove(rigidbody);
             }
-            
+
             var node = QueryNode(rigidbody);
             if (null == node) return;
             node.rigidbodies.Remove(rigidbody);
         }
-        
+
         /// <summary>
         /// AABB 更新
         /// </summary>
@@ -124,12 +130,12 @@ namespace Kowtow.Collision
         {
             var node = QueryNode(rigidbody);
             if (null == node) return;
-            
+
             rigidbodymapping.Remove(rigidbody);
             node.rigidbodies.Remove(rigidbody);
             Rigidbody2Node(rigidbody, node.parent);
         }
-        
+
         /// <summary>
         /// 查询同空间的刚体集合
         /// </summary>
@@ -163,7 +169,7 @@ namespace Kowtow.Collision
         public bool QueryRigidbodies(AABB aabb, out List<Rigidbody> nearbybodies)
         {
             nearbybodies = default;
-            if (false == AABB.Inside(aabb, root.aabb)) return false;
+            if (false == Detection.InsideAABB(aabb, root.aabb)) return false;
 
             nearbybodies = new();
             if (null != root.rigidbodies) nearbybodies.AddRange(root.rigidbodies);
@@ -181,18 +187,18 @@ namespace Kowtow.Collision
         {
             if (null == node) return;
             if (null == node.childs) return;
-            
+
             for (int i = 0; i < node.childs.Length; i++)
             {
                 var child = node.childs[i];
-                
+
                 if (null == child.rigidbodies) continue;
-                
+
                 nearbybodies.AddRange(child.rigidbodies);
                 ChildRigidbodies(child, nearbybodies);
             }
         }
-        
+
         /// <summary>
         /// 获取树子节点下的所有刚体
         /// </summary>
@@ -203,18 +209,18 @@ namespace Kowtow.Collision
         {
             if (null == node) return;
             if (null == node.childs) return;
-            
+
             for (int i = 0; i < node.childs.Length; i++)
             {
                 var child = node.childs[i];
                 if (null == child.rigidbodies) continue;
-                if (false == AABB.Inside(aabb, child.aabb)) continue;
-                
+                if (false == Detection.InsideAABB(aabb, child.aabb)) continue;
+
                 nearbybodies.AddRange(child.rigidbodies);
                 ChildRigidbodies(child, aabb, nearbybodies);
             }
         }
-        
+
         /// <summary>
         /// 通过刚体查询隶属树节点
         /// </summary>
@@ -226,7 +232,7 @@ namespace Kowtow.Collision
 
             return default;
         }
-        
+
         /// <summary>
         /// 刚体存入树节点
         /// </summary>
@@ -252,7 +258,7 @@ namespace Kowtow.Collision
             {
                 foreach (var child in node.childs)
                 {
-                    if (AABB.Inside(rigidbody.aabb, child.aabb))
+                    if (Detection.InsideAABB(rigidbody.aabb, child.aabb))
                     {
                         Rigidbody2Node(rigidbody, child);
                         return;
@@ -260,7 +266,7 @@ namespace Kowtow.Collision
                 }
             }
 
-            if (AABB.Inside(rigidbody.aabb, node.aabb))
+            if (Detection.InsideAABB(rigidbody.aabb, node.aabb))
             {
                 rigidbodymapping.Add(rigidbody, node);
                 node.rigidbodies.Add(rigidbody);
@@ -270,7 +276,7 @@ namespace Kowtow.Collision
 
             Rigidbody2Node(rigidbody, node.parent);
         }
-        
+
         /// <summary>
         /// 重新规划树节点（扩容）
         /// </summary>
@@ -288,7 +294,7 @@ namespace Kowtow.Collision
                 NodeSettings(node, i, node.childs[i]);
             }
         }
-        
+
         /// <summary>
         /// 树节点设置
         /// </summary>
