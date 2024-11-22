@@ -1,7 +1,6 @@
 ﻿using Kowtow.Collision.Shapes;
 using Kowtow.Math;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 
 namespace Kowtow.Collision
 {
@@ -28,7 +27,7 @@ namespace Kowtow.Collision
                 max1.x >= max2.x && max1.y >= max2.y && max1.z >= max2.z
             );
         }
-        
+
         /// <summary>
         /// AABB 碰撞检测
         /// </summary>
@@ -160,31 +159,27 @@ namespace Kowtow.Collision
         public static bool Sweep(Rigidbody a, Rigidbody b, FPVector3 startA, FPVector3 endA, FPVector3 startB, FPVector3 endB, FPQuaternion startRotA, FPQuaternion endRotA, FPQuaternion startRotB, FPQuaternion endRotB, out FP toi)
         {
             toi = FP.One;
-
             // 初步检测两个刚体的扩展 AABB 是否相交，若无相交直接返回 false
             if (false == SweepAABB(a.aabb, b.aabb, startA, endA, startRotA, endRotA, startB, endB, startRotB, endRotB)) return false;
 
-            // TODO 优化，使用多线程，开始查找
             FP step = FP.Zero;
-            FP epsilon = FP.EN1;
             while (true)
             {
-                step += epsilon;
+                step += FP.Epsilon;
                 if (step > FP.One) break;
-                
+
                 FPVector3 positionA = FPVector3.Lerp(startA, endA, step);
                 FPVector3 positionB = FPVector3.Lerp(startB, endB, step);
                 FPQuaternion rotationA = FPQuaternion.Slerp(startRotA, endRotA, step);
                 FPQuaternion rotationB = FPQuaternion.Slerp(startRotB, endRotB, step);
-                
+
                 if (Detect(a.shape, b.shape, positionA, positionB, rotationA, rotationB, out _, out _, out _, false))
                 {
                     toi = step;
                     break;
                 }
             }
-            
-            // 返回是否找到了有效的碰撞时间点
+
             return toi < FP.One;
         }
 

@@ -89,19 +89,21 @@ namespace Kowtow
             if (FP.Zero == t) return;
             timestep = t;
 
-            Collisions();
 #if PARALLEL
             Parallel.ForEach(rigidbodies, rigidbody =>
             {
                 rigidbody.Update(t);
             });
+#else
+            foreach (var rigidbody in rigidbodies)
+            {
+                rigidbody.Update(t);
+            }
 #endif
+            Collisions();
 
             foreach (var rigidbody in rigidbodies)
             {
-#if !PARALLEL
-                rigidbody.Update(t);
-#endif
                 // 事件通知
                 rigidbody.NotifyColliderEvents();
 
@@ -224,10 +226,13 @@ namespace Kowtow
             FPVector3 collisionPositionB = FPVector3.Lerp(startB, endB, toi);
             FPQuaternion collisionRotationB = FPQuaternion.Slerp(startRotB, endRotB, toi);
 
-            self.position = collisionPositionA;
+
             // 计算碰撞点、法线、以及穿透深度
             if (Detection.Detect(self.shape, target.shape, collisionPositionA, collisionPositionB, collisionRotationA, collisionRotationB, out var point, out var normal, out var penetration))
             {
+                FPVector3 correction = normal * penetration;
+                self.position = collisionPositionA + correction;
+                
                 // 添加碰撞器信息
                 self.AddCollider(new Collider
                 {

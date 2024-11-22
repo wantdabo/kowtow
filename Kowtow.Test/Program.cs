@@ -22,7 +22,7 @@ using System.Threading;
 // Console.ReadKey();
 
 // 时间间隔
-FP tick = FP.One / 120;
+FP tick = FP.One / 10;
 // 毫秒
 int ms = (int)(tick * 1000).AsFloat();
 
@@ -35,7 +35,7 @@ FP groundArea = 100000;
 var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 0));
 
 // 添加球体
-var ball = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 0));
+var ball = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
 ball.position = new FPVector3(-10, 10, -10);
 // 设置为动态
 ball.type = RigidbodyType.Dynamic;
@@ -43,7 +43,7 @@ ball.type = RigidbodyType.Dynamic;
 ball.detection = DetectionType.Continuous;
 
 FPRandom random = FPRandom.New(19491001);
-for (int i = 0; i < 1000; i++)
+for (int i = 0; i < 5000; i++)
 {
     var ball2 = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
     ball2.position = new FPVector3(random.Next(-50000, 50000), 10, random.Next(-50000, 50000));
@@ -61,6 +61,6 @@ while (true)
     sw.Stop();
     Console.Title = $"ms: {sw.ElapsedMilliseconds}";
     
-    Console.WriteLine($"{ball.position}, {ball.rotation.eulerAngles}, {ball.velocity}, {ball.GetColliders().Count}");
+    Console.WriteLine($"position -> {ball.position}, velocity -> {ball.velocity}, collider -> {ball.GetColliders().Count}");
     Thread.Sleep(ms);
 }
