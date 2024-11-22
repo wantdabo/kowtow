@@ -1,9 +1,7 @@
 ﻿using Kowtow.Collision;
 using Kowtow.Collision.Shapes;
 using Kowtow.Math;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Kowtow

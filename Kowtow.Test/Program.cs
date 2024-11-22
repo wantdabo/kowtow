@@ -1,5 +1,4 @@
 ﻿using Kowtow;
-using Kowtow.Collision;
 using Kowtow.Collision.Shapes;
 using Kowtow.Math;
 using System;

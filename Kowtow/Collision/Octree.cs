@@ -1,9 +1,6 @@
 ﻿using Kowtow.Math;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Kowtow.Collision
 {

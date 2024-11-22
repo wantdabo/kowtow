@@ -1,6 +1,5 @@
 ﻿#if FP
 using System;
-using System.IO;
 
 namespace Kowtow.Math
 {
