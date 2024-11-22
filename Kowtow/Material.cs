@@ -5,7 +5,7 @@ namespace Kowtow
     /// <summary>
     /// 物理材质
     /// </summary>
-    public class Material
+    public struct Material
     {
         /// <summary>
         /// 摩檫力
@@ -15,7 +15,7 @@ namespace Kowtow
         /// 弹性
         /// </summary>
         public FP bounciness { get; set; }
-        
+
         /// <summary>
         /// 物理材质构造函数
         /// </summary>
