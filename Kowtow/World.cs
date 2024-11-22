@@ -211,7 +211,7 @@ namespace Kowtow
             FPQuaternion endRotA = self.rotation;
 
             FPVector3 startB = targettrans.position;
-            FPVector3 endB = target.position;
+            FPVector3 endB = target.position + target.velocity * timestep;
             FPQuaternion startRotB = targettrans.rotation;
             FPQuaternion endRotB = target.rotation;
 
@@ -223,7 +223,6 @@ namespace Kowtow
             FPQuaternion collisionRotationA = FPQuaternion.Slerp(startRotA, endRotA, toi);
             FPVector3 collisionPositionB = FPVector3.Lerp(startB, endB, toi);
             FPQuaternion collisionRotationB = FPQuaternion.Slerp(startRotB, endRotB, toi);
-
 
             // 计算碰撞点、法线、以及穿透深度
             if (Detection.Detect(self.shape, target.shape, collisionPositionA, collisionPositionB, collisionRotationA, collisionRotationB, out var point, out var normal, out var penetration))

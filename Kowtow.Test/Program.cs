@@ -31,10 +31,10 @@ World world = new World(new FPVector3(0, -981 * FP.EN2, 0));
 FP groundArea = 100000;
 
 // 添加地板
-var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 0));
+var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 3));
 
 // 添加球体
-var ball = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 3));
+var ball = world.AddRigidbody(new SphereShape(FPVector3.zero, FP.Half), FP.One, new Material(FP.One, 0));
 ball.position = new FPVector3(-10, 10, -10);
 // 设置为动态
 ball.type = RigidbodyType.Dynamic;

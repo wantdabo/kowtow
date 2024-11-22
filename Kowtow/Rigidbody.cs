@@ -305,16 +305,59 @@ namespace Kowtow
         }
 
         /// <summary>
-        /// 驱动刚体
+        /// 计算碰撞接触产生的作用力
         /// </summary>
-        /// <param name="t">时间间隔</param>
-        public void Update(FP t)
+        private void CollisionForce()
         {
-            if (RigidbodyType.Static == type) return;
+            if (trigger || 0 == colliders.Count) return;
             
-            // 计算重力
-            GravityForce();
+            foreach (var collider in colliders)
+            {
+                if (collider.rigidbody.trigger) continue;
 
+                // 计算碰撞相对速度
+                FPVector3 relativeVelocity = velocity - collider.rigidbody.velocity;
+
+                // 碰撞速度沿法线分量
+                FP velocityAlongNormal = FPVector3.Dot(relativeVelocity, collider.normal);
+
+                // 如果分离状态，不做碰撞响应
+                if (velocityAlongNormal > 0) continue;
+
+                // 计算反弹速度（考虑材质弹力系数）
+                FP bounciness = FPMath.Min(material.bounciness, collider.rigidbody.material.bounciness);
+                FP impulseMagnitude = -(1 + bounciness) * velocityAlongNormal;
+                impulseMagnitude /= inverseMass + collider.rigidbody.inverseMass;
+
+                // 应用冲量
+                FPVector3 impulse = impulseMagnitude * collider.normal;
+                ApplyImpulse(impulse);
+
+                // 计算摩擦力
+                FPVector3 tangent = relativeVelocity - collider.normal * velocityAlongNormal;
+                FP frictionMagnitude = tangent.magnitude * material.friction * collider.rigidbody.material.friction;
+
+                if (frictionMagnitude > 0)
+                {
+                    // 摩擦力方向与切向速度方向相反
+                    FPVector3 frictionForce = -tangent.normalized * frictionMagnitude;
+                    ApplyForce(frictionForce);
+                }
+                
+                // 如果是连续碰撞检测, 不需要额外修正, 直接跳过 (在连续碰撞检测过程中已经修正)
+                if (DetectionType.Continuous == detection) continue;
+                
+                // 穿透修正
+                FPVector3 correction = collider.normal * collider.penetration;
+                position += correction;
+            }
+        }
+
+        /// <summary>
+        /// 计算速度
+        /// </summary>
+        private void Force2Velocity(FP t)
+        {
             // 计算加速
             var acceleration = force * inverseMass;
             force = FPVector3.zero;
@@ -322,52 +365,25 @@ namespace Kowtow
             velocity += acceleration * t;
             // 速度阻尼
             velocity *= (FP.One - drag * t);
+        }
+
+        /// <summary>
+        /// 驱动刚体
+        /// </summary>
+        /// <param name="t">时间间隔</param>
+        public void Update(FP t)
+        {
+            if (RigidbodyType.Static == type) return;
+
+            // 计算重力
+            GravityForce();
+            // 计算速度
+            Force2Velocity(t);
+            // 计算碰撞接触产生的作用力
+            CollisionForce();
+
             // 更新位置
             position += velocity * t;
-
-            if (trigger) return;
-            
-            // 计算碰撞接触产生的作用力
-            if (0 != colliders.Count)
-            {
-                foreach (var collider in colliders)
-                {
-                    if (collider.rigidbody.trigger) continue;
-                    
-                    // 计算碰撞相对速度
-                    FPVector3 relativeVelocity = velocity - collider.rigidbody.velocity;
-
-                    // 碰撞速度沿法线分量
-                    FP velocityAlongNormal = FPVector3.Dot(relativeVelocity, collider.normal);
-
-                    // 如果分离状态，不做碰撞响应
-                    if (velocityAlongNormal > 0) continue;
-
-                    // 计算反弹速度（考虑材质弹力系数）
-                    FP bounciness = FPMath.Min(material.bounciness, collider.rigidbody.material.bounciness);
-                    FP impulseMagnitude = -(1 + bounciness) * velocityAlongNormal;
-                    impulseMagnitude /= inverseMass + collider.rigidbody.inverseMass;
-
-                    // 应用冲量
-                    FPVector3 impulse = impulseMagnitude * collider.normal;
-                    ApplyImpulse(impulse);
-
-                    // 计算摩擦力
-                    FPVector3 tangent = relativeVelocity - collider.normal * velocityAlongNormal;
-                    FP frictionMagnitude = tangent.magnitude * material.friction * collider.rigidbody.material.friction;
-
-                    if (frictionMagnitude > 0)
-                    {
-                        // 摩擦力方向与切向速度方向相反
-                        FPVector3 frictionForce = -tangent.normalized * frictionMagnitude;
-                        ApplyForce(frictionForce);
-                    }
-
-                    // 穿透修正
-                    FPVector3 correction = collider.normal * collider.penetration;
-                    position += correction;
-                }
-            }
         }
     }
 }
