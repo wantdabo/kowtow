@@ -1,21 +1,21 @@
 ﻿/* Copyright (C) <2009-2011> <Thorben Linneweber, Jitter Physics>
-* 
-*  This software is provided 'as-is', without any express or implied
-*  warranty.  In no event will the authors be held liable for any damages
-*  arising from the use of this software.
-*
-*  Permission is granted to anyone to use this software for any purpose,
-*  including commercial applications, and to alter it and redistribute it
-*  freely, subject to the following restrictions:
-*
-*  1. The origin of this software must not be misrepresented; you must not
-*      claim that you wrote the original software. If you use this software
-*      in a product, an acknowledgment in the product documentation would be
-*      appreciated but is not required.
-*  2. Altered source versions must be plainly marked as such, and must not be
-*      misrepresented as being the original software.
-*  3. This notice may not be removed or altered from any source distribution. 
-*/
+ *
+ *  This software is provided 'as-is', without any express or implied
+ *  warranty.  In no event will the authors be held liable for any damages
+ *  arising from the use of this software.
+ *
+ *  Permission is granted to anyone to use this software for any purpose,
+ *  including commercial applications, and to alter it and redistribute it
+ *  freely, subject to the following restrictions:
+ *
+ *  1. The origin of this software must not be misrepresented; you must not
+ *      claim that you wrote the original software. If you use this software
+ *      in a product, an acknowledgment in the product documentation would be
+ *      appreciated but is not required.
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *      misrepresented as being the original software.
+ *  3. This notice may not be removed or altered from any source distribution.
+ */
 
 namespace Kowtow.Math
 {
@@ -687,41 +687,41 @@ namespace Kowtow.Math
         public static bool operator ==(FPMatrix4x4 value1, FPMatrix4x4 value2)
         {
             return value1.M11 == value2.M11 &&
-                value1.M12 == value2.M12 &&
-                value1.M13 == value2.M13 &&
-                value1.M14 == value2.M14 &&
-                value1.M21 == value2.M21 &&
-                value1.M22 == value2.M22 &&
-                value1.M23 == value2.M23 &&
-                value1.M24 == value2.M24 &&
-                value1.M31 == value2.M31 &&
-                value1.M32 == value2.M32 &&
-                value1.M33 == value2.M33 &&
-                value1.M34 == value2.M34 &&
-                value1.M41 == value2.M41 &&
-                value1.M42 == value2.M42 &&
-                value1.M43 == value2.M43 &&
-                value1.M44 == value2.M44;
+                   value1.M12 == value2.M12 &&
+                   value1.M13 == value2.M13 &&
+                   value1.M14 == value2.M14 &&
+                   value1.M21 == value2.M21 &&
+                   value1.M22 == value2.M22 &&
+                   value1.M23 == value2.M23 &&
+                   value1.M24 == value2.M24 &&
+                   value1.M31 == value2.M31 &&
+                   value1.M32 == value2.M32 &&
+                   value1.M33 == value2.M33 &&
+                   value1.M34 == value2.M34 &&
+                   value1.M41 == value2.M41 &&
+                   value1.M42 == value2.M42 &&
+                   value1.M43 == value2.M43 &&
+                   value1.M44 == value2.M44;
         }
 
         public static bool operator !=(FPMatrix4x4 value1, FPMatrix4x4 value2)
         {
             return value1.M11 != value2.M11 ||
-                value1.M12 != value2.M12 ||
-                value1.M13 != value2.M13 ||
-                value1.M14 != value2.M14 ||
-                value1.M21 != value2.M21 ||
-                value1.M22 != value2.M22 ||
-                value1.M23 != value2.M23 ||
-                value1.M24 != value2.M24 ||
-                value1.M31 != value2.M31 ||
-                value1.M32 != value2.M32 ||
-                value1.M33 != value2.M33 ||
-                value1.M34 != value2.M34 ||
-                value1.M41 != value2.M41 ||
-                value1.M42 != value2.M42 ||
-                value1.M43 != value2.M43 ||
-                value1.M44 != value2.M44;
+                   value1.M12 != value2.M12 ||
+                   value1.M13 != value2.M13 ||
+                   value1.M14 != value2.M14 ||
+                   value1.M21 != value2.M21 ||
+                   value1.M22 != value2.M22 ||
+                   value1.M23 != value2.M23 ||
+                   value1.M24 != value2.M24 ||
+                   value1.M31 != value2.M31 ||
+                   value1.M32 != value2.M32 ||
+                   value1.M33 != value2.M33 ||
+                   value1.M34 != value2.M34 ||
+                   value1.M41 != value2.M41 ||
+                   value1.M42 != value2.M42 ||
+                   value1.M43 != value2.M43 ||
+                   value1.M44 != value2.M44;
         }
 
         public override bool Equals(object obj)
@@ -730,41 +730,41 @@ namespace Kowtow.Math
             FPMatrix4x4 other = (FPMatrix4x4)obj;
 
             return M11 == other.M11 &&
-                M12 == other.M12 &&
-                M13 == other.M13 &&
-                M14 == other.M14 &&
-                M21 == other.M21 &&
-                M22 == other.M22 &&
-                M23 == other.M23 &&
-                M24 == other.M24 &&
-                M31 == other.M31 &&
-                M32 == other.M32 &&
-                M33 == other.M33 &&
-                M34 == other.M44 &&
-                M41 == other.M41 &&
-                M42 == other.M42 &&
-                M43 == other.M43 &&
-                M44 == other.M44 ;
+                   M12 == other.M12 &&
+                   M13 == other.M13 &&
+                   M14 == other.M14 &&
+                   M21 == other.M21 &&
+                   M22 == other.M22 &&
+                   M23 == other.M23 &&
+                   M24 == other.M24 &&
+                   M31 == other.M31 &&
+                   M32 == other.M32 &&
+                   M33 == other.M33 &&
+                   M34 == other.M44 &&
+                   M41 == other.M41 &&
+                   M42 == other.M42 &&
+                   M43 == other.M43 &&
+                   M44 == other.M44;
         }
 
         public override int GetHashCode()
         {
             return M11.GetHashCode() ^
-                M12.GetHashCode() ^
-                M13.GetHashCode() ^
-                M14.GetHashCode() ^
-                M21.GetHashCode() ^
-                M22.GetHashCode() ^
-                M23.GetHashCode() ^
-                M24.GetHashCode() ^
-                M31.GetHashCode() ^
-                M32.GetHashCode() ^
-                M33.GetHashCode() ^
-                M34.GetHashCode() ^
-                M41.GetHashCode() ^
-                M42.GetHashCode() ^
-                M43.GetHashCode() ^
-                M44.GetHashCode();
+                   M12.GetHashCode() ^
+                   M13.GetHashCode() ^
+                   M14.GetHashCode() ^
+                   M21.GetHashCode() ^
+                   M22.GetHashCode() ^
+                   M23.GetHashCode() ^
+                   M24.GetHashCode() ^
+                   M31.GetHashCode() ^
+                   M32.GetHashCode() ^
+                   M33.GetHashCode() ^
+                   M34.GetHashCode() ^
+                   M41.GetHashCode() ^
+                   M42.GetHashCode() ^
+                   M43.GetHashCode() ^
+                   M44.GetHashCode();
         }
 
         /// <summary>
@@ -778,10 +778,22 @@ namespace Kowtow.Math
         {
             FPMatrix4x4 result;
 
-            result.M11 = FP.One;  result.M12 = FP.Zero; result.M13 = FP.Zero; result.M14 = xPosition;
-            result.M21 = FP.Zero; result.M22 = FP.One;  result.M23 = FP.Zero; result.M24 = yPosition;
-            result.M31 = FP.Zero; result.M32 = FP.Zero; result.M33 = FP.One;  result.M34 = zPosition;
-            result.M41 = FP.Zero; result.M42 = FP.Zero; result.M43 = FP.Zero; result.M44 = FP.One;
+            result.M11 = FP.One;
+            result.M12 = FP.Zero;
+            result.M13 = FP.Zero;
+            result.M14 = xPosition;
+            result.M21 = FP.Zero;
+            result.M22 = FP.One;
+            result.M23 = FP.Zero;
+            result.M24 = yPosition;
+            result.M31 = FP.Zero;
+            result.M32 = FP.Zero;
+            result.M33 = FP.One;
+            result.M34 = zPosition;
+            result.M41 = FP.Zero;
+            result.M42 = FP.Zero;
+            result.M43 = FP.Zero;
+            result.M44 = FP.One;
 
             return result;
         }
@@ -802,10 +814,22 @@ namespace Kowtow.Math
         {
             FPMatrix4x4 result;
 
-            result.M11 = xScale;  result.M12 = FP.Zero; result.M13 = FP.Zero; result.M14 = FP.Zero;
-            result.M21 = FP.Zero; result.M22 = yScale;  result.M23 = FP.Zero; result.M24 = FP.Zero;
-            result.M31 = FP.Zero; result.M32 = FP.Zero; result.M33 = zScale;  result.M34 = FP.Zero;
-            result.M41 = FP.Zero; result.M42 = FP.Zero; result.M43 = FP.Zero; result.M44 = FP.One;
+            result.M11 = xScale;
+            result.M12 = FP.Zero;
+            result.M13 = FP.Zero;
+            result.M14 = FP.Zero;
+            result.M21 = FP.Zero;
+            result.M22 = yScale;
+            result.M23 = FP.Zero;
+            result.M24 = FP.Zero;
+            result.M31 = FP.Zero;
+            result.M32 = FP.Zero;
+            result.M33 = zScale;
+            result.M34 = FP.Zero;
+            result.M41 = FP.Zero;
+            result.M42 = FP.Zero;
+            result.M43 = FP.Zero;
+            result.M44 = FP.One;
 
             return result;
         }
@@ -826,10 +850,22 @@ namespace Kowtow.Math
             FP ty = centerPoint.y * (FP.One - yScale);
             FP tz = centerPoint.z * (FP.One - zScale);
 
-            result.M11 = xScale;  result.M12 = FP.Zero; result.M13 = FP.Zero; result.M14 = FP.Zero;
-            result.M21 = FP.Zero; result.M22 = yScale;  result.M23 = FP.Zero; result.M24 = FP.Zero;
-            result.M31 = FP.Zero; result.M32 = FP.Zero; result.M33 = zScale;  result.M34 = FP.Zero;
-            result.M41 = tx;      result.M42 = ty;      result.M43 = tz;      result.M44 = FP.One;
+            result.M11 = xScale;
+            result.M12 = FP.Zero;
+            result.M13 = FP.Zero;
+            result.M14 = FP.Zero;
+            result.M21 = FP.Zero;
+            result.M22 = yScale;
+            result.M23 = FP.Zero;
+            result.M24 = FP.Zero;
+            result.M31 = FP.Zero;
+            result.M32 = FP.Zero;
+            result.M33 = zScale;
+            result.M34 = FP.Zero;
+            result.M41 = tx;
+            result.M42 = ty;
+            result.M43 = tz;
+            result.M44 = FP.One;
 
             return result;
         }
@@ -1175,7 +1211,7 @@ namespace Kowtow.Math
 
         public override string ToString()
         {
-            return string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}", 
+            return string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}",
                 M11.RawValue, M12.RawValue, M13.RawValue, M14.RawValue,
                 M21.RawValue, M22.RawValue, M23.RawValue, M24.RawValue,
                 M31.RawValue, M32.RawValue, M33.RawValue, M34.RawValue,
@@ -1193,14 +1229,5 @@ namespace Kowtow.Math
             TRS(translation, rotation, scale, out result);
             return result;
         }
-
-        // public static TSMatrix4x4 TransformToMatrix(ref TSTransform transform)
-        // {
-        //     TSMatrix4x4 result;
-        //     TRS(transform.localPosition, transform.localRotation, transform.localScale, out result);
-        //     return result;
-        // }
-
     }
-
 }

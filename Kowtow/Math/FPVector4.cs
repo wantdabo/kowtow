@@ -752,12 +752,12 @@ namespace Kowtow.Math
             return result;
         }
 
-        public FPVector2 ToTSVector2()
+        public FPVector2 ToFPVector2()
         {
             return new FPVector2(x, y);
         }
 
-        public FPVector3 ToTSVector()
+        public FPVector3 ToFPVector()
         {
             return new FPVector3(x, y, z);
         }

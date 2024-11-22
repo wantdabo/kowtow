@@ -519,7 +519,7 @@ namespace Kowtow.Math
              );
         }
 
-        public FPVector3 ToTSVector()
+        public FPVector3 ToFPVector3()
         {
             return new FPVector3(x, y, 0);
         }
