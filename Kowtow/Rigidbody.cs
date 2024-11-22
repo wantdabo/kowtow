@@ -255,18 +255,8 @@ namespace Kowtow
         {
             foreach (var collider in colliders)
             {
-                if (false == lastcolliders.Contains(collider))
-                {
-                    if (trigger)
-                    {
-                        TriggerEnter?.Invoke(collider);
-                    }
-                    else
-                    {
-                        CollisionEnter?.Invoke(collider);
-                    }
-                }
-                else
+                var lastcollider = lastcolliders.Find(last => collider.rigidbody == last.rigidbody);
+                if (null != lastcollider.rigidbody)
                 {
                     if (trigger)
                     {
@@ -277,19 +267,31 @@ namespace Kowtow
                         CollisionStay?.Invoke(collider);
                     }
                 }
-            }
-
-            foreach (var collider in lastcolliders)
-            {
-                if (false == colliders.Contains(collider))
+                else
                 {
                     if (trigger)
                     {
-                        TriggerExit?.Invoke(collider);
+                        TriggerEnter?.Invoke(collider);
                     }
                     else
                     {
-                        CollisionExit?.Invoke(collider);
+                        CollisionEnter?.Invoke(collider);
+                    }
+                }
+            }
+
+            foreach (var lastcollider in lastcolliders)
+            {
+                var collider = colliders.Find(c => lastcollider.rigidbody == c.rigidbody);
+                if (null == collider.rigidbody)
+                {
+                    if (trigger)
+                    {
+                        TriggerExit?.Invoke(lastcollider);
+                    }
+                    else
+                    {
+                        CollisionExit?.Invoke(lastcollider);
                     }
                 }
             }
@@ -310,7 +312,7 @@ namespace Kowtow
         private void CollisionForce()
         {
             if (trigger || 0 == colliders.Count) return;
-            
+
             foreach (var collider in colliders)
             {
                 if (collider.rigidbody.trigger) continue;
@@ -343,10 +345,10 @@ namespace Kowtow
                     FPVector3 frictionForce = -tangent.normalized * frictionMagnitude;
                     ApplyForce(frictionForce);
                 }
-                
+
                 // 如果是连续碰撞检测, 不需要额外修正, 直接跳过 (在连续碰撞检测过程中已经修正)
                 if (DetectionType.Continuous == detection) continue;
-                
+
                 // 穿透修正
                 FPVector3 correction = collider.normal * collider.penetration;
                 position += correction;
