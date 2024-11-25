@@ -29,7 +29,6 @@ int ms = (int)(tick * 1000).AsFloat();
 World world = new World(new FPVector3(0, -981 * FP.EN2, 0));
 
 FP groundArea = 100000;
-
 // 添加地板
 var ground = world.AddRigidbody(new BoxShape(FPVector3.zero, new FPVector3(groundArea, 1, groundArea)), FP.One, new Material(FP.One, 3));
 
