@@ -110,6 +110,7 @@ namespace Kowtow
             set
             {
                 mposition = value;
+                PositionChanged?.Invoke(mposition);
                 UpdateAABB();
             }
         }
@@ -123,6 +124,7 @@ namespace Kowtow
             set
             {
                 mrotation = value;
+                RotationChanged?.Invoke(mrotation);
                 UpdateAABB();
             }
         }
@@ -150,6 +152,14 @@ namespace Kowtow
         /// AABB 变化了
         /// </summary>
         public bool aabbupdated { get; set; } = false;
+        /// <summary>
+        /// Position 变化事件
+        /// </summary>
+        public event Action<FPVector3> PositionChanged;
+        /// <summary>
+        /// Rotation 变化事件
+        /// </summary>
+        public event Action<FPQuaternion> RotationChanged;
         /// <summary>
         /// Collision 进入事件
         /// </summary>
