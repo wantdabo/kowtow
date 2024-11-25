@@ -66,6 +66,6 @@
     └─Kowtow.Test
 ```
 - **Kowtow/Kowtow/** 物理核心
-- **Kowtow/Kowtow/Collision/** 碰撞检测算法、几何体定义、八叉树树
+- **Kowtow/Kowtow/Collision/** 碰撞检测算法、几何体定义、八叉树
 - **Kowtow/Kowtow/Math/** 数学库
 - **Kowtow/Kowtow.Test/** 测试用例
