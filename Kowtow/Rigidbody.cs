@@ -131,7 +131,7 @@ namespace Kowtow
         /// <summary>
         /// 力
         /// </summary>
-        public FPVector3 force { get; private set; }
+        public FPVector3 force { get; set; }
         /// <summary>
         /// 速度阻力
         /// </summary>
