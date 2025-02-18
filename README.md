@@ -52,7 +52,7 @@
      ```
 #### <span id="installenv">2.环境配置</span>
 - ##### <span id="installenv.1">1.安装 .NET</span>
-  - 该项目，Luban 配置工具依赖，需要安装 [**.NET 2.0+**](https://dotnet.microsoft.com/zh-cn/download)
+  - [**.NET 2.0+**](https://dotnet.microsoft.com/zh-cn/download)
 - ##### <span id="installenv.2">2.在 Unity 工作</span>
   - 复制 **Kowtow/Kowtow/** 到 Unity 项目中即可/编译 DLL 到 Unity 项目中即可
 ---
