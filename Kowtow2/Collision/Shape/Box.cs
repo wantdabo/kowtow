@@ -9,27 +9,29 @@ namespace Kowtow.Collision.Shape
     public class Box : IShape
     {
         /// <summary>
+        /// 立方体
+        /// </summary>
+        public ShapeDef type => ShapeDef.Box;
+        /// <summary>
         /// 中心点
         /// </summary>
         public FPVector3 center { get; set; }
-        /// <summary>
-        /// 包围盒
-        /// </summary>
-        public AABB aabb { get; set; }
         /// <summary>
         /// 尺寸
         /// </summary>
         public FPVector3 size { get; set; }
 
         /// <summary>
-        /// 立方体构造函数
+        /// 克隆
         /// </summary>
-        /// <param name="center">中心点</param>
-        /// <param name="size">尺寸</param>
-        public Box(FPVector3 center, FPVector3 size)
+        /// <returns>几何体</returns>
+        public IShape Clone()
         {
-            this.center = center;
-            this.size = size;
+            var clone = ObjectPool.Get<Box>();
+            clone.center = center;
+            clone.size = size;
+            
+            return clone;
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Kowtow.Collision
                 FPVector3 halfSize = box.size * FP.Half;
 
                 // 定义 box 的 8 个顶点（以中心为基准）
-                var vertices = new FPVector3[8];
+                var vertices = ObjectPool.Get<List<FPVector3>>();
                 vertices[0] = new FPVector3(-halfSize.x, -halfSize.y, -halfSize.z);
                 vertices[1] = new FPVector3(halfSize.x, -halfSize.y, -halfSize.z);
                 vertices[2] = new FPVector3(-halfSize.x, halfSize.y, -halfSize.z);
@@ -58,6 +58,8 @@ namespace Kowtow.Collision
                     min = FPVector3.Min(min, transformedVertex);
                     max = FPVector3.Max(max, transformedVertex);
                 }
+                vertices.Clear();
+                ObjectPool.Set(vertices);
 
                 // 计算最终的 AABB
                 return new AABB

@@ -8,12 +8,17 @@ namespace Kowtow.Collision.Shape
     public interface IShape
     {
         /// <summary>
+        /// 几何体类型
+        /// </summary>
+        public ShapeDef type { get; }
+        /// <summary>
         /// 中心点
         /// </summary>
         public FPVector3 center { get; set; }
         /// <summary>
-        /// 包围盒
+        /// 克隆
         /// </summary>
-        public AABB aabb { get; set; }
+        /// <returns>几何体</returns>
+        public IShape Clone();
     }
 }

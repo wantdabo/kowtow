@@ -10,7 +10,7 @@ namespace Kowtow.Collision
         /// <summary>
         /// 刚体
         /// </summary>
-        public Rigidbody rigidbody { get; set; }
+        public uint rigidbody { get; set; }
         /// <summary>
         /// 碰撞点
         /// </summary>
